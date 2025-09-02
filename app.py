@@ -2,7 +2,9 @@
 # Diploma Santé - Suivi de l'avancement des fiches
 # Thème sombre élégant, logo centré, tableau 3/4 + boursiers 1/4
 # Persistance des coches via localStorage
-# UVSQ (CM uniquement) + UPS (CM listés manuellement, fusion des matières)
+# UVSQ (CM seulement) + UPS (CM listés manuellement, fusion des matières)
+# Tri des matières par fréquence décroissante (UVSQ + UPS), "CM inconnus" en bas
+# Numérotation CM continue par matière (pas par semaine)
 
 import base64
 import json
@@ -187,7 +189,7 @@ def normalize_from_ups(label: str) -> str:
     return UNKNOWN_SUBJECT
 
 # =========================
-# UVSQ (CM only) + S12 ajoutée (résumé)
+# UVSQ (CM only) + S12 ajoutée (résumé à partir de tes captures)
 # =========================
 def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
              title: str, date_str: str, explicit_subject: Optional[str]=None, cid: Optional[str]=None):
@@ -197,7 +199,7 @@ def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
     })
 
 UVSQ: Dict[str, Dict[str, List[Dict]]] = {}
-# — Exemples représentatifs extraits de tes captures (CM uniquement, sans TD/révisions)
+# (Extraits CM uniquement pour illustrer — tu pourras compléter si besoin)
 add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-1")
 add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Biologie cellulaire – Histo Embryo", "08/09/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-1")
@@ -219,17 +221,15 @@ add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Biologie cellulaire – Histo Embr
 add_item(UVSQ, "17/11/2025 - 23/11/2025", "CM (intitulé non précisé)", "17/11/2025", cid="UVSQ-CM-10")
 
 # =========================
-# UPS — tous les CM listés (sept -> déc 2025)
-# IMPORTANT : le compteur est par (semaine, matière) → pas de “CM 1” répété.
+# UPS — TOUS LES CM listés (sept → déc 2025) + numérotation CONTINUE par matière
 # =========================
 def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
-    rows: List[Tuple[str, str, str]] = []  # (dd/mm/yyyy, label, title)
-
+    # (date, matière brute UPS, titre optionnel si inconnu)
+    rows: List[Tuple[str, str, Optional[str]]] = []
     def add(d: str, matiere: str, title: Optional[str] = None):
-        rows.append((d, matiere, title or f"CM {matiere}"))
+        rows.append((d, matiere, title))
 
     # -------- Septembre 2025 --------
-    # Semaine 1-5 sept
     add("01/09/2025", "CM inconnus", "Amphi de rentrée + Méthodologie")
     add("02/09/2025", "Biologie")
     add("02/09/2025", "Statistiques")
@@ -239,7 +239,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("04/09/2025", "Biologie")
     add("05/09/2025", "Chimie")
 
-    # Semaine 8-12 sept
     add("08/09/2025", "Biologie")
     add("08/09/2025", "Biologie")
     add("09/09/2025", "Biologie")
@@ -249,7 +248,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("12/09/2025", "Chimie")
     add("12/09/2025", "Biologie")
 
-    # Semaine 15-19 sept
     add("15/09/2025", "Biologie")
     add("15/09/2025", "Biologie")
     add("16/09/2025", "Biophysique")
@@ -260,7 +258,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("18/09/2025", "Biologie")
     add("19/09/2025", "Biologie")
 
-    # Semaine 22-26 sept
     add("22/09/2025", "Biologie")
     add("22/09/2025", "Statistiques")
     add("23/09/2025", "Biophysique")
@@ -272,7 +269,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("26/09/2025", "Chimie")
     add("26/09/2025", "Biologie")
 
-    # Semaine 29 sept - 3 oct
     add("29/09/2025", "Biophysique")
     add("29/09/2025", "Biophysique")
     add("30/09/2025", "Chimie")
@@ -285,7 +281,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("03/10/2025", "Statistiques")
 
     # -------- Octobre 2025 --------
-    # Semaine 6-10 oct
     add("06/10/2025", "Biophysique")
     add("06/10/2025", "Biologie")
     add("07/10/2025", "Statistiques")
@@ -297,7 +292,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("10/10/2025", "Chimie")
     add("10/10/2025", "Biologie")
 
-    # Semaine 13-17 oct
     add("13/10/2025", "Chimie")
     add("13/10/2025", "Statistiques")
     add("14/10/2025", "Chimie")
@@ -309,7 +303,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("17/10/2025", "Biophysique")
     add("17/10/2025", "Biologie")
 
-    # Semaine 20-24 oct
     add("20/10/2025", "Chimie")
     add("20/10/2025", "Biophysique")
     add("21/10/2025", "Biologie")
@@ -321,7 +314,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("24/10/2025", "Chimie")
     add("24/10/2025", "Statistiques")
 
-    # Semaine 27-31 oct
     add("27/10/2025", "Biophysique")
     add("27/10/2025", "Biophysique")
     add("28/10/2025", "Biologie")
@@ -334,7 +326,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("31/10/2025", "Biologie")
 
     # -------- Novembre 2025 --------
-    # Semaine 3-7 nov
     add("03/11/2025", "Biophysique")
     add("03/11/2025", "Biophysique")
     add("04/11/2025", "Biophysique")
@@ -346,10 +337,9 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("07/11/2025", "Chimie")
     add("07/11/2025", "Statistiques")
 
-    # Semaine 10-14 nov
     add("10/11/2025", "Chimie")
     add("10/11/2025", "Chimie")
-    # 11/11 : férié
+    # 11/11 férié
     add("12/11/2025", "Biologie")
     add("12/11/2025", "Biophysique")
     add("13/11/2025", "Chimie")
@@ -357,7 +347,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("14/11/2025", "Chimie")
     add("14/11/2025", "Biologie")
 
-    # Semaine 17-21 nov
     add("17/11/2025", "Chimie")
     add("17/11/2025", "Chimie")
     add("18/11/2025", "Biologie")
@@ -369,7 +358,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("21/11/2025", "Chimie")
     add("21/11/2025", "Biologie")
 
-    # Semaine 24-28 nov
     add("24/11/2025", "Biologie")
     add("24/11/2025", "Biophysique")
     add("25/11/2025", "Chimie")
@@ -382,7 +370,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("28/11/2025", "CM inconnus", "Consignes concours")
 
     # -------- Décembre 2025 --------
-    # Semaine 1-5 déc
     add("01/12/2025", "Biophysique")
     add("01/12/2025", "Biologie")
     add("02/12/2025", "Chimie")
@@ -394,7 +381,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("05/12/2025", "Chimie")
     add("05/12/2025", "Statistiques")
 
-    # Semaine 8-12 déc
     add("08/12/2025", "Biophysique")
     add("08/12/2025", "Statistiques")
     add("09/12/2025", "Chimie")
@@ -406,7 +392,6 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("12/12/2025", "Biophysique")
     add("12/12/2025", "Biologie")
 
-    # Semaine 15-19 déc
     add("15/12/2025", "Biophysique")
     add("15/12/2025", "Biophysique")
     add("16/12/2025", "Chimie")
@@ -418,28 +403,28 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("19/12/2025", "Chimie")
     add("19/12/2025", "Biophysique")
 
-    # Construction : compteur par (semaine, matière)
+    # Tri chronologique pour une numérotation continue cohérente
+    rows.sort(key=lambda x: parse_fr_date(x[0]))
+
     out: Dict[str, Dict[str, List[Dict]]] = {}
-    counters: Dict[Tuple[str, str], int] = {}
+    counters_continuous: Dict[str, int] = {}  # par matière normalisée (globale)
 
     for dstr, raw_subject, opt_title in rows:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
         subject = normalize_from_ups(raw_subject)
 
-        key = (wlab, subject)
-        counters[key] = counters.get(key, 0) + 1
-        idx = counters[key]
+        counters_continuous[subject] = counters_continuous.get(subject, 0) + 1
+        idx = counters_continuous[subject]
 
-        # Titre propre (CM X N) pour matières fusionnées
-        if opt_title != f"CM {raw_subject}" and subject == UNKNOWN_SUBJECT:
+        if opt_title and subject == UNKNOWN_SUBJECT:
             title = opt_title
         else:
             base = subject.split(" – ")[0] if subject != UNKNOWN_SUBJECT else raw_subject
             title = f"CM {base} {idx}"
 
         out.setdefault(wlab, {}).setdefault(subject, []).append({
-            "id": f"UPS-{wlab}-{subject}-{idx}",
+            "id": f"UPS-{subject}-{idx}",
             "title": title,
             "date": d.strftime("%d/%m/%Y"),
         })
@@ -457,17 +442,29 @@ DATA = {
 }
 FACULTIES = ["UPC", "UPS", "UVSQ"]
 
-def all_subjects_sorted() -> List[str]:
-    subjects = set()
+# =========================
+# TRI des matières par fréquence (desc), "CM inconnus" en bas
+# =========================
+def subjects_sorted_by_frequency() -> List[str]:
+    counts: Dict[str, int] = {}
     for fac in FACULTIES:
-        for subj_map in DATA.get(fac, {}).values():
-            subjects.update(subj_map.keys())
-    return sorted(
-        subjects,
-        key=lambda s: (0 if s in COMMON_HINTS else (2 if s == UNKNOWN_SUBJECT else 1), s.lower())
-    )
+        fac_weeks = DATA.get(fac, {})
+        for week_map in fac_weeks.values():
+            for subj, items in week_map.items():
+                counts[subj] = counts.get(subj, 0) + len(items)
 
-SUBJECTS = all_subjects_sorted()
+    # garantir présence si vide au départ
+    for subj in list(COMMON_HINTS) + [UNKNOWN_SUBJECT]:
+        counts.setdefault(subj, 0)
+
+    # tri : inconnus tout en bas, sinon par fréquence décroissante puis alpha
+    def sort_key(s: str):
+        if s == UNKNOWN_SUBJECT: return (1, 0, s.lower())
+        return (0, -counts.get(s, 0), s.lower())
+
+    return sorted(counts.keys(), key=sort_key)
+
+SUBJECTS = subjects_sorted_by_frequency()
 
 # =========================
 # PERSISTENCE localStorage
@@ -490,12 +487,11 @@ if "loaded_from_localstorage" not in st.session_state:
     st.session_state.loaded_from_localstorage = True
 
 def save_to_localstorage_once():
-    """Sauvegarde une seule fois en fin de script (évite les keys dupliquées)."""
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
     streamlit_js_eval(
         js_expressions=f"localStorage.setItem('ds_progress', '{json.dumps(payload)}')",
-        key=f"save-store-{uuid4()}",   # key unique → pas de conflit
+        key=f"save-store-{uuid4()}",
     )
 
 # =========================
@@ -527,7 +523,6 @@ with left:
     # Semaine (élargi) — sans "Tout décocher"
     all_weeks = week_ranges(date(2025, 9, 1), date(2026, 1, 4))
     if all_weeks and all_weeks[-1].endswith("04/01/2026"):
-        # étiquette souhaitée
         all_weeks[-1] = "29/12/2025 - 04/01/2025"
 
     def first_week_with_data():
@@ -537,7 +532,6 @@ with left:
                     return w
         return all_weeks[0]
 
-    # Colonnes: Semaine (large) | Filtre | Tout cocher
     ctop = st.columns([3.6, 2.0, 1.0])
     with ctop[0]:
         st.caption("Semaine")
@@ -554,7 +548,6 @@ with left:
                 for subj, items in DATA[fac].get(week, {}).items():
                     for it in items:
                         st.session_state[k(fac, subj, week, it["id"])] = True
-            # pas de flush ici → la sauvegarde n'est faite qu'une fois en bas
             st.success("Toutes les cases de la semaine sont cochées.")
 
     st.divider()
@@ -565,7 +558,7 @@ with left:
     for fac, c in zip(FACULTIES, [c1, c2, c3]):
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
-    # Lignes
+    # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
     for subj in [s for s in SUBJECTS if query in s.lower()]:
         r0, r1, r2, r3 = st.columns([2.1, 1, 1, 1], gap="large")
         with r0:
@@ -585,7 +578,6 @@ with left:
                         st.markdown('<div class="cell">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
-                        # Label blanc “Fiche déjà faite”
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
@@ -621,7 +613,7 @@ with right:
          "1Croyable2025!"),
         ("UPEC L1 (Crystolink, Ahuna)",
          "https://cristolink.medecine.u-pec.fr/login/index.php",
-         "ahuna.somon@etu.u-pec.fr",  # mise à jour demandée
+         "ahuna.somon@etu.u-pec.fr",
          "!ObantiAlif20092019!"),
         ("USPN (Moodle, Wiam)",
          "https://ent.univ-paris13.fr",
