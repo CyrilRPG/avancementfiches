@@ -2,9 +2,9 @@
 # Diploma Santé - Suivi de l'avancement des fiches
 # Thème sombre élégant, logo centré, tableau 3/4 + boursiers 1/4
 # Persistance des coches via localStorage
-# UVSQ (CM seulement) + UPS (CM listés manuellement, fusion des matières)
-# Tri des matières par fréquence décroissante (UVSQ + UPS), "CM inconnus" en bas
-# Numérotation CM continue par matière (pas par semaine)
+# UPS uniquement (CM listés manuellement, fusion des matières)
+# Tri des matières par fréquence décroissante, "CM inconnus" en bas
+# Numérotation CM respectée telle que fournie (titres), horaires visibles
 
 import base64
 import json
@@ -158,8 +158,17 @@ def load_logo_base64(paths: List[str]) -> Optional[str]:
 def parse_fr_date(dstr: str) -> date:
     return datetime.strptime(dstr, "%d/%m/%Y").date()
 
+def format_time(t: str) -> str:
+    # "8h15", "10H30" -> "08:15"
+    m = re.match(r'^\s*(\d{1,2})\s*[hH:]\s*(\d{2})\s*$', t.strip())
+    if not m:
+        return t
+    hh = int(m.group(1))
+    mm = int(m.group(2))
+    return f"{hh:02d}:{mm:02d}"
+
 # =========================
-# CLASSIFICATION MATIÈRES
+# CLASSIFICATION MATIÈRES (fusion des libellés)
 # =========================
 COMMON_HINTS = {
     "Biologie cellulaire – Histo-Embryo",
@@ -170,10 +179,10 @@ UNKNOWN_SUBJECT = "CM inconnus"
 
 def classify_subject(raw_title: str) -> str:
     t = raw_title.upper()
-    if re.search(r'BIO\s*CELL|HISTO|EMBRYO', t): return "Biologie cellulaire – Histo-Embryo"
-    if re.search(r'CHIMIE|BIOCHIMIE', t):         return "Chimie – Biochimie"
-    if re.search(r'PHYSIQUE|BIOPHYSIQUE', t):     return "Physique – Biophysique"
-    if re.search(r'STAT', t):                     return "Statistiques"
+    if re.search(r'BIO\s*CELL|HISTO|EMBRYO|BIOLOGIE', t): return "Biologie cellulaire – Histo-Embryo"
+    if re.search(r'CHIMIE|BIOCHIMIE', t):                 return "Chimie – Biochimie"
+    if re.search(r'PHYSIQUE|BIOPHYSIQUE', t):             return "Physique – Biophysique"
+    if re.search(r'STAT', t):                             return "Statistiques"
     return UNKNOWN_SUBJECT
 
 def normalize_from_ups(label: str) -> str:
@@ -182,265 +191,145 @@ def normalize_from_ups(label: str) -> str:
         return "Biologie cellulaire – Histo-Embryo"
     if t.startswith("biophysique"):
         return "Physique – Biophysique"
-    if t.startswith("chimie") or t.startswith("biochimie"):
+    if t.startswith("chimie") or t.startswith("biochimie") or t.startswith("chimiie"):
         return "Chimie – Biochimie"
     if t.startswith("stat"):
         return "Statistiques"
+    if "consignes" in t:
+        return UNKNOWN_SUBJECT
     return UNKNOWN_SUBJECT
 
 # =========================
-# UVSQ (CM only) + S12 ajoutée (résumé à partir de tes captures)
+# UPS — Cours fournis (sept → nov 2025)
 # =========================
-def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
-             title: str, date_str: str, explicit_subject: Optional[str]=None, cid: Optional[str]=None):
-    subj = explicit_subject or classify_subject(title)
-    dst.setdefault(week_label, {}).setdefault(subj, []).append({
-        "id": cid or f"{title}@{date_str}", "title": title, "date": date_str,
-    })
-
-UVSQ: Dict[str, Dict[str, List[Dict]]] = {}
-# (Extraits CM uniquement pour illustrer — tu pourras compléter si besoin)
-add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-1")
-add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Biologie cellulaire – Histo Embryo", "08/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-1")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Biologie cellulaire – Histo Embryo", "17/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-2")
-add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Biologie cellulaire – Histo Embryo", "22/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-3")
-add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Physique – Biophysique", "30/09/2025",
-         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-1")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Biologie cellulaire – Histo Embryo", "06/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-5")
-add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Biologie cellulaire – Histo Embryo", "13/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-7")
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "27/10/2025", cid="UVSQ-CM-6")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Physique – Biophysique", "07/11/2025",
-         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-2")
-add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Biologie cellulaire – Histo Embryo", "10/11/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-9")
-add_item(UVSQ, "17/11/2025 - 23/11/2025", "CM (intitulé non précisé)", "17/11/2025", cid="UVSQ-CM-10")
-
-# =========================
-# UPS — TOUS LES CM listés (sept → déc 2025) + numérotation CONTINUE par matière
-# =========================
-def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
-    # (date, matière brute UPS, titre optionnel si inconnu)
-    rows: List[Tuple[str, str, Optional[str]]] = []
-    def add(d: str, matiere: str, title: Optional[str] = None):
-        rows.append((d, matiere, title))
-
-    # -------- Septembre 2025 --------
-    add("01/09/2025", "CM inconnus", "Amphi de rentrée + Méthodologie")
-    add("02/09/2025", "Biologie")
-    add("02/09/2025", "Statistiques")
-    add("03/09/2025", "Biophysique")
-    add("03/09/2025", "CM inconnus", "Prépa rédactionnel")
-    add("04/09/2025", "Biophysique")
-    add("04/09/2025", "Biologie")
-    add("05/09/2025", "Chimie")
-
-    add("08/09/2025", "Biologie")
-    add("08/09/2025", "Biologie")
-    add("09/09/2025", "Biologie")
-    add("09/09/2025", "Biologie")
-    add("11/09/2025", "Biologie")
-    add("11/09/2025", "Biologie")
-    add("12/09/2025", "Chimie")
-    add("12/09/2025", "Biologie")
-
-    add("15/09/2025", "Biologie")
-    add("15/09/2025", "Biologie")
-    add("16/09/2025", "Biophysique")
-    add("16/09/2025", "Statistiques")
-    add("17/09/2025", "Biophysique")
-    add("17/09/2025", "Biologie")
-    add("18/09/2025", "Biophysique")
-    add("18/09/2025", "Biologie")
-    add("19/09/2025", "Biologie")
-
-    add("22/09/2025", "Biologie")
-    add("22/09/2025", "Statistiques")
-    add("23/09/2025", "Biophysique")
-    add("23/09/2025", "Biophysique")
-    add("24/09/2025", "Biophysique")
-    add("24/09/2025", "Biophysique")
-    add("25/09/2025", "Chimie")
-    add("25/09/2025", "Biologie")
-    add("26/09/2025", "Chimie")
-    add("26/09/2025", "Biologie")
-
-    add("29/09/2025", "Biophysique")
-    add("29/09/2025", "Biophysique")
-    add("30/09/2025", "Chimie")
-    add("30/09/2025", "Biologie")
-    add("01/10/2025", "Biophysique")
-    add("01/10/2025", "Statistiques")
-    add("02/10/2025", "Chimie")
-    add("02/10/2025", "Biologie")
-    add("03/10/2025", "Biophysique")
-    add("03/10/2025", "Statistiques")
-
-    # -------- Octobre 2025 --------
-    add("06/10/2025", "Biophysique")
-    add("06/10/2025", "Biologie")
-    add("07/10/2025", "Statistiques")
-    add("07/10/2025", "Biophysique")
-    add("08/10/2025", "Biophysique")
-    add("08/10/2025", "Biologie")
-    add("09/10/2025", "Biophysique")
-    add("09/10/2025", "Biologie")
-    add("10/10/2025", "Chimie")
-    add("10/10/2025", "Biologie")
-
-    add("13/10/2025", "Chimie")
-    add("13/10/2025", "Statistiques")
-    add("14/10/2025", "Chimie")
-    add("14/10/2025", "Biologie")
-    add("15/10/2025", "Chimie")
-    add("15/10/2025", "Biophysique")
-    add("16/10/2025", "Chimie")
-    add("16/10/2025", "Biologie")
-    add("17/10/2025", "Biophysique")
-    add("17/10/2025", "Biologie")
-
-    add("20/10/2025", "Chimie")
-    add("20/10/2025", "Biophysique")
-    add("21/10/2025", "Biologie")
-    add("21/10/2025", "Biophysique")
-    add("22/10/2025", "Chimie")
-    add("22/10/2025", "Biophysique")
-    add("23/10/2025", "Chimie")
-    add("23/10/2025", "Biologie")
-    add("24/10/2025", "Chimie")
-    add("24/10/2025", "Statistiques")
-
-    add("27/10/2025", "Biophysique")
-    add("27/10/2025", "Biophysique")
-    add("28/10/2025", "Biologie")
-    add("28/10/2025", "Statistiques")
-    add("29/10/2025", "Chimie")
-    add("29/10/2025", "Biophysique")
-    add("30/10/2025", "Chimie")
-    add("30/10/2025", "Biophysique")
-    add("31/10/2025", "Chimie")
-    add("31/10/2025", "Biologie")
-
-    # -------- Novembre 2025 --------
-    add("03/11/2025", "Biophysique")
-    add("03/11/2025", "Biophysique")
-    add("04/11/2025", "Biophysique")
-    add("04/11/2025", "Biologie")
-    add("05/11/2025", "Chimie")
-    add("05/11/2025", "Biologie")
-    add("06/11/2025", "Biologie")
-    add("06/11/2025", "Chimie")
-    add("07/11/2025", "Chimie")
-    add("07/11/2025", "Statistiques")
-
-    add("10/11/2025", "Chimie")
-    add("10/11/2025", "Chimie")
-    # 11/11 férié
-    add("12/11/2025", "Biologie")
-    add("12/11/2025", "Biophysique")
-    add("13/11/2025", "Chimie")
-    add("13/11/2025", "Biologie")
-    add("14/11/2025", "Chimie")
-    add("14/11/2025", "Biologie")
-
-    add("17/11/2025", "Chimie")
-    add("17/11/2025", "Chimie")
-    add("18/11/2025", "Biologie")
-    add("18/11/2025", "Biologie")
-    add("19/11/2025", "Biologie")
-    add("19/11/2025", "Biophysique")
-    add("20/11/2025", "Chimie")
-    add("20/11/2025", "Biologie")
-    add("21/11/2025", "Chimie")
-    add("21/11/2025", "Biologie")
-
-    add("24/11/2025", "Biologie")
-    add("24/11/2025", "Biophysique")
-    add("25/11/2025", "Chimie")
-    add("25/11/2025", "Biophysique")
-    add("26/11/2025", "Biologie")
-    add("26/11/2025", "Biologie")
-    add("27/11/2025", "Chimie")
-    add("27/11/2025", "Statistiques")
-    add("28/11/2025", "Chimie")
-    add("28/11/2025", "CM inconnus", "Consignes concours")
-
-    # -------- Décembre 2025 --------
-    add("01/12/2025", "Biophysique")
-    add("01/12/2025", "Biologie")
-    add("02/12/2025", "Chimie")
-    add("02/12/2025", "Biophysique")
-    add("03/12/2025", "Chimie")
-    add("03/12/2025", "Biophysique")
-    add("04/12/2025", "Chimie")
-    add("04/12/2025", "Biologie")
-    add("05/12/2025", "Chimie")
-    add("05/12/2025", "Statistiques")
-
-    add("08/12/2025", "Biophysique")
-    add("08/12/2025", "Statistiques")
-    add("09/12/2025", "Chimie")
-    add("09/12/2025", "Biologie")
-    add("10/12/2025", "Biologie")
-    add("10/12/2025", "Biophysique")
-    add("11/12/2025", "Biophysique")
-    add("11/12/2025", "Biologie")
-    add("12/12/2025", "Biophysique")
-    add("12/12/2025", "Biologie")
-
-    add("15/12/2025", "Biophysique")
-    add("15/12/2025", "Biophysique")
-    add("16/12/2025", "Chimie")
-    add("16/12/2025", "Biologie")
-    add("17/12/2025", "Chimie")
-    add("17/12/2025", "Biologie")
-    add("18/12/2025", "Chimie")
-    add("18/12/2025", "Biophysique")
-    add("19/12/2025", "Chimie")
-    add("19/12/2025", "Biophysique")
-
-    # Tri chronologique pour une numérotation continue cohérente
-    rows.sort(key=lambda x: parse_fr_date(x[0]))
+def build_ups_from_schedule() -> Dict[str, Dict[str, List[Dict]]]:
+    # Chaque entrée: (date "dd/mm/2025", [(matiere, titre, start, end), ...])
+    S: List[Tuple[str, List[Tuple[str, str, str, str]]]] = [
+        ("02/09/2025", [("Biologie", "Biologie 1", "8h15", "10h15"),
+                        ("Biophysique", "Biophysique 2", "10h30", "12h30")]),
+        ("03/09/2025", [("Biophysique", "Biophysique 2", "8h15", "10h15")]),
+        ("04/09/2025", [("Biophysique", "Biophysique 3", "8h15", "10h15"),
+                        ("Statistiques", "Statistiques 1", "10h30", "12h30")]),
+        ("05/09/2025", [("Chimie", "Chimie 1", "8h15", "10h15")]),
+        ("08/09/2025", [("Biologie", "Biologie 2", "8h15", "10h15"),
+                        ("Biologie", "Biologie 3", "10h30", "12h30")]),
+        ("09/09/2025", [("Biochimie", "Biochimie 1", "8h15", "10h15"),
+                        ("Biologie", "Biologie 4", "10h30", "12h30")]),
+        ("10/09/2025", [("Biologie", "Biologie 5", "8h15", "10h15"),
+                        ("Biochimie", "Biochimie 2", "10h30", "12h30")]),
+        ("11/09/2025", [("Biophysique", "Biophysique 4", "8h15", "10h15"),
+                        ("Statistiques", "Statistiques 2", "10h30", "12h30")]),
+        ("12/09/2025", [("Chimie", "Chimie 2", "8h15", "10h15"),
+                        ("Biologie", "Biologie 6", "10h30", "12h30")]),
+        ("15/09/2025", [("Biologie", "Biologie 7", "8h15", "10h15")]),
+        ("16/09/2025", [("Biologie", "Biologie 8", "8h15", "10h15"),
+                        ("Biochimie", "Biochimie 3", "10h30", "12h30")]),
+        ("18/09/2025", [("Biophysique", "Biophysique 6", "8h15", "10h15"),
+                        ("Statistiques", "Statistiques 3", "10h30", "12h30")]),
+        ("19/09/2025", [("Chimie", "Chimie 3", "8h15", "10h15"),
+                        ("Biophysique", "Biophysique 7", "10h30", "12h30")]),
+        ("22/09/2025", [("Biophysique", "Biophysique 5", "10h30", "12h30")]),
+        ("23/09/2025", [("Biologie", "Biologie 9", "8h15", "10h15"),
+                        ("Biochimie", "Biochimie 4", "10h30", "12h30")]),
+        ("24/09/2025", [("Biophysique", "Biophysique 8", "8h15", "10h15"),
+                        ("Biologie", "Biologie 10", "10h30", "12h30")]),
+        ("25/09/2025", [("Chimie", "Chimie 4", "8h15", "10h15"),
+                        ("Statistiques", "Statistiques 4", "10h30", "12h30")]),
+        ("29/09/2025", [("Biophysique", "Biophysique 9", "10h30", "12h30")]),
+        ("30/09/2025", [("Biochimie", "Biochimie 5", "8h15", "10h15"),
+                        ("Biologie", "Biologie 12", "10h30", "12h30")]),
+        ("01/10/2025", [("Statistiques", "Statistiques 5", "8h15", "10h15"),
+                        ("Chimie", "Chimie 5", "10h30", "12h30")]),  # "Chimiie" corrigé -> "Chimie"
+        ("02/10/2025", [("Biophysique", "Biophysique 10", "8h15", "10h15")]),
+        ("03/10/2025", [("Chimie", "Chimie 6", "8h15", "10h15"),
+                        ("Biologie", "Biologie 13", "10h30", "12h30")]),
+        ("06/10/2025", [("Biophysique", "Biophysique 11", "8h15", "10h15"),
+                        ("Biologie", "Biologie 14", "10h30", "12h30")]),
+        ("07/10/2025", [("Biochimie", "Biochimie 6", "8h15", "10h15"),
+                        ("Biophysique", "Biophysique 12", "10h30", "12h30")]),
+        ("08/10/2025", [("Biophysique", "Biophysique 13", "10h30", "12h30")]),
+        ("09/10/2025", [("Statistiques", "Statistiques 6", "8h15", "10h15"),
+                        ("Biologie", "Biologie 11", "10h30", "12h30")]),
+        ("10/10/2025", [("Chimie", "Chimie 7", "8h15", "10h15"),
+                        ("Biologie", "Biologie 15", "10h30", "12h30")]),
+        ("13/10/2025", [("Biologie", "Biologie 16", "8h15", "10h15"),
+                        ("Biophysique", "Biophysique 14", "10h30", "12h30")]),
+        ("14/10/2025", [("Biochimie", "Biochimie 7", "8h15", "10h15")]),
+        ("16/10/2025", [("Statistiques", "Statistiques 7", "8h15", "10h15"),
+                        ("Biologie", "Biologie 17", "10h30", "12H30")]),
+        ("17/10/2025", [("Chimie", "Chimie 8", "8h15", "10h15")]),
+        ("20/10/2025", [("Biophysique", "Biophysique 15", "8h15", "10h15"),
+                        ("Biologie", "Biologie 18", "10h30", "12h30")]),
+        ("21/10/2025", [("Biochimie", "Biochimie 8", "8h15", "10h15"),
+                        ("Chimie", "Chimie 9", "10H30", "12h30")]),
+        ("23/10/2025", [("Biophysique", "Biophysique 16", "8h15", "10h15")]),
+        ("24/10/2025", [("Biophysique", "Biophysique 17", "8h15", "10h15"),
+                        ("Biologie", "Biologie 19", "10H30", "12h30")]),
+        ("27/10/2025", [("Biophysique", "Biophysique 18", "8h15", "10h15"),
+                        ("Biologie", "Biologie 20", "10h30", "12h30")]),
+        ("28/10/2025", [("Biologie", "Biologie 21", "8h15", "10h15"),
+                        ("Chimie", "Chimie 10", "10h30", "12h30")]),
+        ("03/11/2025", [("Biophysique", "Biophysique 19", "8h15", "10h15"),
+                        ("Biologie", "Biologie 22", "10h30", "12h30")]),
+        ("04/11/2025", [("Biochimie", "Biochimie 9", "8h15", "10h15"),
+                        ("Statistiques", "Statistiques 8", "10h30", "12h30")]),
+        ("05/11/2025", [("Biochimie", "Biochimie 10", "10h30", "12h30")]),
+        ("06/11/2025", [("Chimie", "Chimie 11", "8h15", "10h15"),
+                        ("Biologie", "Biologie 23", "10h30", "12h30")]),
+        ("07/11/2025", [("Biophysique", "Biophysique 20", "8h15", "10h15"),
+                        ("Biochimie", "Biochimie 11", "10h30", "12h30")]),
+        ("10/11/2025", [("Chimie", "Chimie 12", "10h30", "12h30")]),
+        ("12/11/2025", [("Biophysique", "Biophysique 21", "10h30", "12H30")]),
+        ("13/11/2025", [("Biochimie", "Biochimie 12", "8h15", "10h15"),
+                        ("Biologie", "Biologie 24", "10h30", "12h30")]),
+        ("14/11/2025", [("Chimie", "Chimie 13", "8h15", "10h15"),
+                        ("Biologie", "Biologie 25", "10h30", "12h30")]),
+        ("17/11/2025", [("Biologie", "Biologie 26", "8h15", "10h15")]),
+        ("18/11/2025", [("Biologie", "Biologie 27", "8h15", "10h15"),
+                        ("Biochimie", "Biochimie 13", "10h30", "12h30")]),
+        ("19/11/2025", [("Biochimie", "Biochimie 14", "8h15", "10h15")]),
+        ("20/11/2025", [("Statistiques", "Statistiques 9", "8h15", "10h15"),
+                        ("Biophysique", "Biophysique 22", "10h30", "12h30")]),
+        ("21/11/2025", [("Chimie", "Chimie 14", "8h15", "10h15"),
+                        ("Biologie", "Biologie 28", "10h30", "12H30")]),
+        ("24/11/2025", [("Biochimie", "Biochimie 15", "8h15", "10h15"),
+                        ("Biologie", "Biologie 29", "10h30", "12H30")]),
+        ("25/11/2025", [("Biologie", "Biologie 30", "8h15", "10h15"),
+                        ("Biophysique", "Biophysique 23", "10h30", "12H30")]),
+        ("26/11/2025", [("Biologie", "Biologie 31", "8h15", "10h15"),
+                        ("Biochimie", "Biochimie 16", "10h30", "12H30")]),
+        ("27/11/2025", [("Biologie", "Biologie 32", "8h15", "10h15"),
+                        ("Statistiques", "Statistiques 10", "10h30", "12h30")]),
+        ("28/11/2025", [("Chimie", "Chimie 15", "8h15", "10h15"),
+                        ("CM inconnus", "Consignes concours", "10h30", "12h30")]),
+    ]
 
     out: Dict[str, Dict[str, List[Dict]]] = {}
-    counters_continuous: Dict[str, int] = {}  # par matière normalisée (globale)
-
-    for dstr, raw_subject, opt_title in rows:
+    for dstr, items in S:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
-        subject = normalize_from_ups(raw_subject)
-
-        counters_continuous[subject] = counters_continuous.get(subject, 0) + 1
-        idx = counters_continuous[subject]
-
-        if opt_title and subject == UNKNOWN_SUBJECT:
-            title = opt_title
-        else:
-            base = subject.split(" – ")[0] if subject != UNKNOWN_SUBJECT else raw_subject
-            title = f"CM {base} {idx}"
-
-        out.setdefault(wlab, {}).setdefault(subject, []).append({
-            "id": f"UPS-{subject}-{idx}",
-            "title": title,
-            "date": d.strftime("%d/%m/%Y"),
-        })
+        for raw_subj, title, t1, t2 in items:
+            subj = normalize_from_ups(raw_subj)
+            h1 = format_time(t1)
+            h2 = format_time(t2)
+            display = f"{title} — {h1}–{h2}"
+            item_id = f"UPS::{raw_subj}::{title}::{dstr}::{h1}-{h2}"
+            out.setdefault(wlab, {}).setdefault(subj, []).append({
+                "id": item_id,
+                "title": display,
+                "date": d.strftime("%d/%m/%Y"),
+            })
     return out
 
-UPS = build_ups_manual()
+UPS = build_ups_from_schedule()
 
 # =========================
-# DATA GLOBALE
+# DATA GLOBALE (UPS seul)
 # =========================
 DATA = {
-    "UPC": {},      # vide pour l’instant
     "UPS": UPS,
-    "UVSQ": UVSQ,
 }
-FACULTIES = ["UPC", "UPS", "UVSQ"]
+FACULTIES = ["UPS"]
 
 # =========================
 # TRI des matières par fréquence (desc), "CM inconnus" en bas
@@ -453,11 +342,9 @@ def subjects_sorted_by_frequency() -> List[str]:
             for subj, items in week_map.items():
                 counts[subj] = counts.get(subj, 0) + len(items)
 
-    # garantir présence si vide au départ
     for subj in list(COMMON_HINTS) + [UNKNOWN_SUBJECT]:
         counts.setdefault(subj, 0)
 
-    # tri : inconnus tout en bas, sinon par fréquence décroissante puis alpha
     def sort_key(s: str):
         if s == UNKNOWN_SUBJECT: return (1, 0, s.lower())
         return (0, -counts.get(s, 0), s.lower())
@@ -520,10 +407,22 @@ left, right = st.columns([3, 1], gap="large")
 with left:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
-    # Semaine (élargi) — sans "Tout décocher"
-    all_weeks = week_ranges(date(2025, 9, 1), date(2026, 1, 4))
-    if all_weeks and all_weeks[-1].endswith("04/01/2026"):
-        all_weeks[-1] = "29/12/2025 - 04/01/2025"
+    # Déduire automatiquement la plage de semaines d'après les données UPS
+    def dataset_bounds():
+        dmin, dmax = None, None
+        for fac_weeks in DATA.values():
+            for week_map in fac_weeks.values():
+                for items in week_map.values():
+                    for it in items:
+                        d = parse_fr_date(it["date"])
+                        dmin = d if dmin is None else min(dmin, d)
+                        dmax = d if dmax is None else max(dmax, d)
+        if dmin is None:  # fallback
+            dmin, dmax = date(2025, 9, 1), date(2025, 12, 31)
+        return dmin, dmax
+
+    dmin, dmax = dataset_bounds()
+    all_weeks = week_ranges(dmin, dmax)
 
     def first_week_with_data():
         for w in all_weeks:
@@ -552,19 +451,19 @@ with left:
 
     st.divider()
 
-    # Entêtes tableau
-    c0, c1, c2, c3 = st.columns([2.1, 1, 1, 1])
-    c0.markdown('<div class="table-head">Matière</div>', unsafe_allow_html=True)
-    for fac, c in zip(FACULTIES, [c1, c2, c3]):
-        c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
+    # Entêtes tableau (dynamique selon FACULTIES)
+    cols = st.columns([2.1] + [1] * len(FACULTIES))
+    cols[0].markdown('<div class="table-head">Matière</div>', unsafe_allow_html=True)
+    for fac, col in zip(FACULTIES, cols[1:]):
+        col.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
     # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
     for subj in [s for s in SUBJECTS if query in s.lower()]:
-        r0, r1, r2, r3 = st.columns([2.1, 1, 1, 1], gap="large")
-        with r0:
+        row_cols = st.columns([2.1] + [1] * len(FACULTIES), gap="large")
+        with row_cols[0]:
             st.markdown(f'<div class="rowline subject">{subj}</div>', unsafe_allow_html=True)
 
-        def render_cell(col, fac):
+        for fac, col in zip(FACULTIES, row_cols[1:]):
             items = DATA.get(fac, {}).get(week, {}).get(subj, [])
             with col:
                 st.markdown('<div class="rowline">', unsafe_allow_html=True)
@@ -587,10 +486,6 @@ with left:
                         )
                         st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
-
-        render_cell(r1, "UPC")
-        render_cell(r2, "UPS")
-        render_cell(r3, "UVSQ")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
