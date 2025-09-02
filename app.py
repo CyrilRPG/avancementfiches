@@ -8,6 +8,7 @@ import base64
 import json
 import os
 import re
+from uuid import uuid4
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
@@ -91,10 +92,11 @@ st.markdown(
       font-weight:700; color:#eaf2fb;
     }}
 
-    /* Checkboxes lisibles */
+    /* Checkboxes : label blanc + fort contraste */
     div.stCheckbox > label > div[data-testid="stMarkdownContainer"] p {{
-      color: {TEXT} !important; font-weight: 600;
+      color: #ffffff !important; font-weight: 700 !important;
     }}
+
     .ok-pill {{
       display:inline-block; padding:2px 8px; border-radius: 999px;
       background: rgba(74,222,128,.15); border: 1px solid rgba(74,222,128,.35); color:{SUCCESS};
@@ -152,7 +154,6 @@ def load_logo_base64(paths: List[str]) -> Optional[str]:
     return None
 
 def parse_fr_date(dstr: str) -> date:
-    """ '1/09/2025' or '01/10/2025' → date """
     return datetime.strptime(dstr, "%d/%m/%Y").date()
 
 # =========================
@@ -174,7 +175,6 @@ def classify_subject(raw_title: str) -> str:
     return UNKNOWN_SUBJECT
 
 def normalize_from_ups(label: str) -> str:
-    """Mappe les libellés UPS vers les matières UVSQ quand c'est similaire."""
     t = label.strip().lower()
     if t.startswith("biologie"):
         return "Biologie cellulaire – Histo-Embryo"
@@ -187,7 +187,7 @@ def normalize_from_ups(label: str) -> str:
     return UNKNOWN_SUBJECT
 
 # =========================
-# UVSQ (CM only) + S12 ajoutée
+# UVSQ (CM only) + S12 ajoutée (résumé)
 # =========================
 def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
              title: str, date_str: str, explicit_subject: Optional[str]=None, cid: Optional[str]=None):
@@ -197,85 +197,32 @@ def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
     })
 
 UVSQ: Dict[str, Dict[str, List[Dict]]] = {}
-# (bloc résumé des CM UVSQ déjà extraits + S12)
+# — Exemples représentatifs extraits de tes captures (CM uniquement, sans TD/révisions)
 add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-1")
-add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-2")
-
 add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Biologie cellulaire – Histo Embryo", "08/09/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-1")
-add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Chimie – Biochimie", "08/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-1")
-add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM (intitulé non précisé)", "09/09/2025", cid="UVSQ-CM-3")
-
 add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Biologie cellulaire – Histo Embryo", "17/09/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-2")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Chimie – Biochimie", "15/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-2")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Chimie – Biochimie", "17/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-3")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM (intitulé non précisé)", "15/09/2025", cid="UVSQ-CM-4")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM (intitulé non précisé)", "15/09/2025", cid="UVSQ-CM-5")
-
 add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Biologie cellulaire – Histo Embryo", "22/09/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-3")
-add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Chimie – Biochimie", "24/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-4")
-add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Chimie – Biochimie", "22/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-5")
-
 add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Physique – Biophysique", "30/09/2025",
          explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-1")
-add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Biologie cellulaire – Histo Embryo", "01/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-4")
-
 add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Biologie cellulaire – Histo Embryo", "06/10/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-5")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Chimie – Biochimie", "06/10/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-6")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Biologie cellulaire – Histo Embryo", "08/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-6")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Chimie – Biochimie", "08/10/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-7")
-
 add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Biologie cellulaire – Histo Embryo", "13/10/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-7")
-add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Chimie – Biochimie", "14/10/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-8")
-add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Biologie cellulaire – Histo Embryo", "15/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-8")
-
 add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "27/10/2025", cid="UVSQ-CM-6")
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "28/10/2025", cid="UVSQ-CM-7")
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "29/10/2025", cid="UVSQ-CM-8")
-
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Chimie – Biochimie", "04/11/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-9")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Chimie – Biochimie", "04/11/2025",
-         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-10")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM (intitulé non précisé)", "05/11/2025", cid="UVSQ-CM-9")
 add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Physique – Biophysique", "07/11/2025",
          explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-2")
-
 add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Biologie cellulaire – Histo Embryo", "10/11/2025",
          explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-9")
-add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Physique – Biophysique", "10/11/2025",
-         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-3")
-
 add_item(UVSQ, "17/11/2025 - 23/11/2025", "CM (intitulé non précisé)", "17/11/2025", cid="UVSQ-CM-10")
 
 # =========================
 # UPS — tous les CM listés (sept -> déc 2025)
+# IMPORTANT : le compteur est par (semaine, matière) → pas de “CM 1” répété.
 # =========================
 def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
-    """
-    Construit le mapping semaine -> matière -> [cours] pour UPS à partir
-    de la liste fournie par l'utilisateur (septembre à décembre 2025).
-    Biologie = Biologie cellulaire – Histo-Embryo (fusion UVSQ),
-    Biophysique = Physique – Biophysique,
-    Chimie = Chimie – Biochimie,
-    Statistiques = Statistiques,
-    autres -> CM inconnus.
-    """
     rows: List[Tuple[str, str, str]] = []  # (dd/mm/yyyy, label, title)
 
     def add(d: str, matiere: str, title: Optional[str] = None):
@@ -471,27 +418,28 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("19/12/2025", "Chimie")
     add("19/12/2025", "Biophysique")
 
-    # Construction de la structure
+    # Construction : compteur par (semaine, matière)
     out: Dict[str, Dict[str, List[Dict]]] = {}
-    counters: Dict[Tuple[str, str, str], int] = {}
+    counters: Dict[Tuple[str, str], int] = {}
+
     for dstr, raw_subject, opt_title in rows:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
         subject = normalize_from_ups(raw_subject)
 
-        # numérotation CM par sujet et semaine pour des titres propres
-        key = (wlab, subject, dstr)
+        key = (wlab, subject)
         counters[key] = counters.get(key, 0) + 1
         idx = counters[key]
 
-        title = opt_title if opt_title != f"CM {raw_subject}" else f"CM {raw_subject} {idx}"
-        # si on a mappé vers matière UVSQ, on renomme le titre pour cohérence visuelle
-        if subject != UNKNOWN_SUBJECT and raw_subject != subject:
-            base = subject.split(" – ")[0] if " – " in subject else subject
+        # Titre propre (CM X N) pour matières fusionnées
+        if opt_title != f"CM {raw_subject}" and subject == UNKNOWN_SUBJECT:
+            title = opt_title
+        else:
+            base = subject.split(" – ")[0] if subject != UNKNOWN_SUBJECT else raw_subject
             title = f"CM {base} {idx}"
 
         out.setdefault(wlab, {}).setdefault(subject, []).append({
-            "id": f"UPS-{dstr}-{subject}-{idx}",
+            "id": f"UPS-{wlab}-{subject}-{idx}",
             "title": title,
             "date": d.strftime("%d/%m/%Y"),
         })
@@ -541,12 +489,13 @@ if "loaded_from_localstorage" not in st.session_state:
         pass
     st.session_state.loaded_from_localstorage = True
 
-def flush_to_localstorage():
+def save_to_localstorage_once():
+    """Sauvegarde une seule fois en fin de script (évite les keys dupliquées)."""
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
     streamlit_js_eval(
         js_expressions=f"localStorage.setItem('ds_progress', '{json.dumps(payload)}')",
-        key="save-store"
+        key=f"save-store-{uuid4()}",   # key unique → pas de conflit
     )
 
 # =========================
@@ -575,9 +524,10 @@ left, right = st.columns([3, 1], gap="large")
 with left:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
-    # Semaine (élargi) — pas de "Tout décocher"
+    # Semaine (élargi) — sans "Tout décocher"
     all_weeks = week_ranges(date(2025, 9, 1), date(2026, 1, 4))
     if all_weeks and all_weeks[-1].endswith("04/01/2026"):
+        # étiquette souhaitée
         all_weeks[-1] = "29/12/2025 - 04/01/2025"
 
     def first_week_with_data():
@@ -588,7 +538,7 @@ with left:
         return all_weeks[0]
 
     # Colonnes: Semaine (large) | Filtre | Tout cocher
-    ctop = st.columns([3.4, 2.0, 1.2])
+    ctop = st.columns([3.6, 2.0, 1.0])
     with ctop[0]:
         st.caption("Semaine")
         week = st.selectbox("Semaine", all_weeks,
@@ -604,7 +554,8 @@ with left:
                 for subj, items in DATA[fac].get(week, {}).items():
                     for it in items:
                         st.session_state[k(fac, subj, week, it["id"])] = True
-            flush_to_localstorage()
+            # pas de flush ici → la sauvegarde n'est faite qu'une fois en bas
+            st.success("Toutes les cases de la semaine sont cochées.")
 
     st.divider()
 
@@ -634,10 +585,14 @@ with left:
                         st.markdown('<div class="cell">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
+                        # Label blanc “Fiche déjà faite”
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
-                        st.markdown(f"<span class='ok-pill'>{'OK' if new_val else 'À faire'}</span>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"<span class='ok-pill'>{'OK' if new_val else 'À faire'}</span>",
+                            unsafe_allow_html=True,
+                        )
                         st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -666,7 +621,7 @@ with right:
          "1Croyable2025!"),
         ("UPEC L1 (Crystolink, Ahuna)",
          "https://cristolink.medecine.u-pec.fr/login/index.php",
-         "ahuna.somon@etu.u-pec.fr",  # maj demandée
+         "ahuna.somon@etu.u-pec.fr",  # mise à jour demandée
          "!ObantiAlif20092019!"),
         ("USPN (Moodle, Wiam)",
          "https://ent.univ-paris13.fr",
@@ -691,12 +646,7 @@ with right:
         )
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Sauvegarde localStorage (fin de script)
-def _save():
-    payload = {kk: bool(vv) for kk, vv in st.session_state.items()
-               if isinstance(kk, str) and kk.startswith("ds::")}
-    streamlit_js_eval(
-        js_expressions=f"localStorage.setItem('ds_progress', '{json.dumps(payload)}')",
-        key="save-store"
-    )
-_save()
+# =========================
+# Sauvegarde localStorage (une seule fois)
+# =========================
+save_to_localstorage_once()
