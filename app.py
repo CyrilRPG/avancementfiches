@@ -1,12 +1,14 @@
 # app.py — Streamlit Cloud
-# DS theme (dark soft), header centré avec logo, tableau 3/4 et Boursiers 1/4,
-# persistance localStorage, filtre matières, "Tout cocher", import UVSQ + UPS (PDF)
+# Diploma Santé - Suivi de l'avancement des fiches
+# Thème sombre élégant, logo centré, tableau 3/4 + boursiers 1/4
+# Persistance des coches via localStorage
+# UVSQ (CM uniquement) + UPS (CM listés manuellement, fusion des matières)
 
 import base64
 import json
 import os
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
@@ -129,8 +131,14 @@ def week_ranges(start: date, end_included: date) -> List[str]:
         cur += timedelta(days=7)
     return out
 
-def monday_of_iso_week(year: int, iso_week: int) -> date:
-    return date.fromisocalendar(year, iso_week, 1)
+def monday_of(d: date) -> date:
+    return d - timedelta(days=d.weekday())
+
+def week_label_for(d: date) -> str:
+    m = monday_of(d)
+    s = m.strftime("%d/%m/%Y")
+    e = (m + timedelta(days=6)).strftime("%d/%m/%Y")
+    return f"{s} - {e}"
 
 def make_key(*parts: str) -> str:
     slug = lambda s: re.sub(r'[^a-z0-9]+', '_', s.lower())
@@ -142,6 +150,10 @@ def load_logo_base64(paths: List[str]) -> Optional[str]:
             with open(p, "rb") as f:
                 return base64.b64encode(f.read()).decode("utf-8")
     return None
+
+def parse_fr_date(dstr: str) -> date:
+    """ '1/09/2025' or '01/10/2025' → date """
+    return datetime.strptime(dstr, "%d/%m/%Y").date()
 
 # =========================
 # CLASSIFICATION MATIÈRES
@@ -158,6 +170,20 @@ def classify_subject(raw_title: str) -> str:
     if re.search(r'BIO\s*CELL|HISTO|EMBRYO', t): return "Biologie cellulaire – Histo-Embryo"
     if re.search(r'CHIMIE|BIOCHIMIE', t):         return "Chimie – Biochimie"
     if re.search(r'PHYSIQUE|BIOPHYSIQUE', t):     return "Physique – Biophysique"
+    if re.search(r'STAT', t):                     return "Statistiques"
+    return UNKNOWN_SUBJECT
+
+def normalize_from_ups(label: str) -> str:
+    """Mappe les libellés UPS vers les matières UVSQ quand c'est similaire."""
+    t = label.strip().lower()
+    if t.startswith("biologie"):
+        return "Biologie cellulaire – Histo-Embryo"
+    if t.startswith("biophysique"):
+        return "Physique – Biophysique"
+    if t.startswith("chimie") or t.startswith("biochimie"):
+        return "Chimie – Biochimie"
+    if t.startswith("stat"):
+        return "Statistiques"
     return UNKNOWN_SUBJECT
 
 # =========================
@@ -167,170 +193,311 @@ def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
              title: str, date_str: str, explicit_subject: Optional[str]=None, cid: Optional[str]=None):
     subj = explicit_subject or classify_subject(title)
     dst.setdefault(week_label, {}).setdefault(subj, []).append({
-        "id": cid or title, "title": title, "date": date_str,
+        "id": cid or f"{title}@{date_str}", "title": title, "date": date_str,
     })
 
 UVSQ: Dict[str, Dict[str, List[Dict]]] = {}
-# S1
-add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="CM-1")
-add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="CM-2")
-# S2
+# (bloc résumé des CM UVSQ déjà extraits + S12)
+add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-1")
+add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-2")
+
 add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Biologie cellulaire – Histo Embryo", "08/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-1")
-add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Chimie – Biochimie (UE1)", "08/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-1")
-add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM (intitulé non précisé)", "09/09/2025", cid="CM-3")
-# S3
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-1")
+add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Chimie – Biochimie", "08/09/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-1")
+add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM (intitulé non précisé)", "09/09/2025", cid="UVSQ-CM-3")
+
 add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Biologie cellulaire – Histo Embryo", "17/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-2")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Chimie – Biochimie (PASS-1.1)", "15/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-2")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Chimie – Biochimie (PASS-1.1)", "17/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-3")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM (intitulé non précisé)", "15/09/2025", cid="CM-4")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM (intitulé non précisé)", "15/09/2025", cid="CM-5")
-# S4
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-2")
+add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Chimie – Biochimie", "15/09/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-2")
+add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Chimie – Biochimie", "17/09/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-3")
+add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM (intitulé non précisé)", "15/09/2025", cid="UVSQ-CM-4")
+add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM (intitulé non précisé)", "15/09/2025", cid="UVSQ-CM-5")
+
 add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Biologie cellulaire – Histo Embryo", "22/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-3")
-add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Chimie – Biochimie (PASS-1.1)", "24/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-4")
-add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Chimie – Biochimie (PASS-1.1)", "22/09/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-5")
-# S5
-add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Physique – Biophysique (PASS-3.1)", "30/09/2025",
-         explicit_subject="Physique – Biophysique", cid="PHYS-1")
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-3")
+add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Chimie – Biochimie", "24/09/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-4")
+add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Chimie – Biochimie", "22/09/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-5")
+
+add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Physique – Biophysique", "30/09/2025",
+         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-1")
 add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Biologie cellulaire – Histo Embryo", "01/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-4")
-# S6
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-4")
+
 add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Biologie cellulaire – Histo Embryo", "06/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-5")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Chimie – Biochimie (PASS-1.1)", "06/10/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-6")
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-5")
+add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Chimie – Biochimie", "06/10/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-6")
 add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Biologie cellulaire – Histo Embryo", "08/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-6")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Chimie – Biochimie (PASS-1.1)", "08/10/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-7")
-# S7
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-6")
+add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Chimie – Biochimie", "08/10/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-7")
+
 add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Biologie cellulaire – Histo Embryo", "13/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-7")
-add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Chimie – Biochimie (PASS-1.1)", "14/10/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-8")
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-7")
+add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Chimie – Biochimie", "14/10/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-8")
 add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Biologie cellulaire – Histo Embryo", "15/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-8")
-# S9
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "27/10/2025", cid="CM-6")
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "28/10/2025", cid="CM-7")
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "29/10/2025", cid="CM-8")
-# S10
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Chimie – Biochimie (PASS-1.1)", "04/11/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-9")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Chimie – Biochimie (PASS-1.1)", "04/11/2025",
-         explicit_subject="Chimie – Biochimie", cid="CHIM-10")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM (intitulé non précisé)", "05/11/2025", cid="CM-9")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Physique – Biophysique (PASS-3.1)", "07/11/2025",
-         explicit_subject="Physique – Biophysique", cid="PHYS-2")
-# S11
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-8")
+
+add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "27/10/2025", cid="UVSQ-CM-6")
+add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "28/10/2025", cid="UVSQ-CM-7")
+add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "29/10/2025", cid="UVSQ-CM-8")
+
+add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Chimie – Biochimie", "04/11/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-9")
+add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Chimie – Biochimie", "04/11/2025",
+         explicit_subject="Chimie – Biochimie", cid="UVSQ-CHIM-10")
+add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM (intitulé non précisé)", "05/11/2025", cid="UVSQ-CM-9")
+add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Physique – Biophysique", "07/11/2025",
+         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-2")
+
 add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Biologie cellulaire – Histo Embryo", "10/11/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="BIO-9")
-add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Physique – Biophysique (PASS-3.1)", "10/11/2025",
-         explicit_subject="Physique – Biophysique", cid="PHYS-3")
-# S12 (image S12)
-add_item(UVSQ, "17/11/2025 - 23/11/2025", "CM (intitulé non précisé)", "17/11/2025", cid="CM-10")
+         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-9")
+add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Physique – Biophysique", "10/11/2025",
+         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-3")
+
+add_item(UVSQ, "17/11/2025 - 23/11/2025", "CM (intitulé non précisé)", "17/11/2025", cid="UVSQ-CM-10")
 
 # =========================
-# UPS (PDF) — parsing robuste
+# UPS — tous les CM listés (sept -> déc 2025)
 # =========================
-UE_TO_SUBJECT = {
-    1: "Chimie – Biochimie",                  # UE1 Biochimie
-    2: "Biologie cellulaire – Histo-Embryo",  # UE2 Biologie
-    3: "Physique – Biophysique",              # UE3 Biophysique
-    4: "Statistiques",                        # UE4
-    5: "Chimie – Biochimie",                  # UE5 Chimie
-}
-
-def extract_pdf_text(paths: List[str]) -> str:
-    txt = ""
-    for p in paths:
-        if not os.path.exists(p):
-            continue
-        try:
-            import PyPDF2
-            with open(p, "rb") as f:
-                reader = PyPDF2.PdfReader(f)
-                for page in reader.pages:
-                    t = page.extract_text() or ""
-                    # homogénéise les espaces
-                    t = re.sub(r"[ \t]+", " ", t)
-                    txt += "\n" + t
-        except Exception:
-            continue
-    return txt.strip()
-
-def parse_ups_schedule(pdf_text: str) -> Dict[str, Dict[str, List[Dict]]]:
+def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     """
-    Détecte les blocs Sem (Sem, SEM, Sem. XX).
-    Dans chaque bloc, repère toutes les occurrences d'UE1..UE5 sous n'importe quelle forme:
-      UE1, UE 1, UE1-1, UE1.1, UE1 CM1, etc.
-    Crée des CM "CM UE{n} {k}" où k est l'indice trouvé ou incrémenté si absent.
-    Date = lundi de la semaine ISO 2025.
+    Construit le mapping semaine -> matière -> [cours] pour UPS à partir
+    de la liste fournie par l'utilisateur (septembre à décembre 2025).
+    Biologie = Biologie cellulaire – Histo-Embryo (fusion UVSQ),
+    Biophysique = Physique – Biophysique,
+    Chimie = Chimie – Biochimie,
+    Statistiques = Statistiques,
+    autres -> CM inconnus.
     """
-    data: Dict[str, Dict[str, List[Dict]]] = {}
-    if not pdf_text:
-        return data
+    rows: List[Tuple[str, str, str]] = []  # (dd/mm/yyyy, label, title)
 
-    # Sépare par "Sem" pour des blocs de semaine
-    # on capture le numéro de semaine
-    blocks: List[Tuple[int, str]] = []  # (sem_number, block_text)
-    # Ajoute delimiters explicites
-    sem_pat = re.compile(r'(?:^|\n)\s*(?:SEM\.?|Sem\.?|sem\.?)\s*([0-9]{1,2})\b', re.IGNORECASE)
-    indices = [(m.start(), int(m.group(1))) for m in sem_pat.finditer(pdf_text)]
-    for i, (pos, sem_no) in enumerate(indices):
-        start = pos
-        end = indices[i+1][0] if i+1 < len(indices) else len(pdf_text)
-        blocks.append((sem_no, pdf_text[start:end]))
+    def add(d: str, matiere: str, title: Optional[str] = None):
+        rows.append((d, matiere, title or f"CM {matiere}"))
 
-    # Pattern UE (souple)
-    ue_pat = re.compile(r'UE\s*([1-5])(?:[^\d]?(\d+))?', re.IGNORECASE)
+    # -------- Septembre 2025 --------
+    # Semaine 1-5 sept
+    add("01/09/2025", "CM inconnus", "Amphi de rentrée + Méthodologie")
+    add("02/09/2025", "Biologie")
+    add("02/09/2025", "Statistiques")
+    add("03/09/2025", "Biophysique")
+    add("03/09/2025", "CM inconnus", "Prépa rédactionnel")
+    add("04/09/2025", "Biophysique")
+    add("04/09/2025", "Biologie")
+    add("05/09/2025", "Chimie")
 
-    for sem_no, chunk in blocks:
-        # date semaine
-        try:
-            monday = monday_of_iso_week(2025, sem_no)
-        except Exception:
-            continue
-        week_label = f"{monday.strftime('%d/%m/%Y')} - {(monday + timedelta(days=6)).strftime('%d/%m/%Y')}"
+    # Semaine 8-12 sept
+    add("08/09/2025", "Biologie")
+    add("08/09/2025", "Biologie")
+    add("09/09/2025", "Biologie")
+    add("09/09/2025", "Biologie")
+    add("11/09/2025", "Biologie")
+    add("11/09/2025", "Biologie")
+    add("12/09/2025", "Chimie")
+    add("12/09/2025", "Biologie")
 
-        # Compteur auto par UE si pas de numéro explicite
-        counters = {u: 0 for u in range(1, 6)}
+    # Semaine 15-19 sept
+    add("15/09/2025", "Biologie")
+    add("15/09/2025", "Biologie")
+    add("16/09/2025", "Biophysique")
+    add("16/09/2025", "Statistiques")
+    add("17/09/2025", "Biophysique")
+    add("17/09/2025", "Biologie")
+    add("18/09/2025", "Biophysique")
+    add("18/09/2025", "Biologie")
+    add("19/09/2025", "Biologie")
 
-        # Cherche toutes les UEs dans le bloc
-        for m in ue_pat.finditer(chunk):
-            ue = int(m.group(1))
-            raw_k = m.group(2)
-            if raw_k is None:
-                counters[ue] += 1
-                kidx = counters[ue]
-            else:
-                kidx = int(raw_k)
-                counters[ue] = max(counters[ue], kidx)
+    # Semaine 22-26 sept
+    add("22/09/2025", "Biologie")
+    add("22/09/2025", "Statistiques")
+    add("23/09/2025", "Biophysique")
+    add("23/09/2025", "Biophysique")
+    add("24/09/2025", "Biophysique")
+    add("24/09/2025", "Biophysique")
+    add("25/09/2025", "Chimie")
+    add("25/09/2025", "Biologie")
+    add("26/09/2025", "Chimie")
+    add("26/09/2025", "Biologie")
 
-            subject = UE_TO_SUBJECT.get(ue, UNKNOWN_SUBJECT)
-            title = f"CM UE{ue} {kidx} — {subject}"
-            entry = {
-                "id": f"UPS-UE{ue}-{kidx}",
-                "title": title,
-                "date": monday.strftime("%d/%m/%Y"),
-            }
-            data.setdefault(week_label, {}).setdefault(subject, []).append(entry)
+    # Semaine 29 sept - 3 oct
+    add("29/09/2025", "Biophysique")
+    add("29/09/2025", "Biophysique")
+    add("30/09/2025", "Chimie")
+    add("30/09/2025", "Biologie")
+    add("01/10/2025", "Biophysique")
+    add("01/10/2025", "Statistiques")
+    add("02/10/2025", "Chimie")
+    add("02/10/2025", "Biologie")
+    add("03/10/2025", "Biophysique")
+    add("03/10/2025", "Statistiques")
 
-    return data
+    # -------- Octobre 2025 --------
+    # Semaine 6-10 oct
+    add("06/10/2025", "Biophysique")
+    add("06/10/2025", "Biologie")
+    add("07/10/2025", "Statistiques")
+    add("07/10/2025", "Biophysique")
+    add("08/10/2025", "Biophysique")
+    add("08/10/2025", "Biologie")
+    add("09/10/2025", "Biophysique")
+    add("09/10/2025", "Biologie")
+    add("10/10/2025", "Chimie")
+    add("10/10/2025", "Biologie")
 
-# essaie à la racine et dans /streamlit
-pdf_text = extract_pdf_text([
-    "CM 1er semestre (1).pdf",
-    "streamlit/CM 1er semestre (1).pdf",
-])
-UPS: Dict[str, Dict[str, List[Dict]]] = parse_ups_schedule(pdf_text)
+    # Semaine 13-17 oct
+    add("13/10/2025", "Chimie")
+    add("13/10/2025", "Statistiques")
+    add("14/10/2025", "Chimie")
+    add("14/10/2025", "Biologie")
+    add("15/10/2025", "Chimie")
+    add("15/10/2025", "Biophysique")
+    add("16/10/2025", "Chimie")
+    add("16/10/2025", "Biologie")
+    add("17/10/2025", "Biophysique")
+    add("17/10/2025", "Biologie")
+
+    # Semaine 20-24 oct
+    add("20/10/2025", "Chimie")
+    add("20/10/2025", "Biophysique")
+    add("21/10/2025", "Biologie")
+    add("21/10/2025", "Biophysique")
+    add("22/10/2025", "Chimie")
+    add("22/10/2025", "Biophysique")
+    add("23/10/2025", "Chimie")
+    add("23/10/2025", "Biologie")
+    add("24/10/2025", "Chimie")
+    add("24/10/2025", "Statistiques")
+
+    # Semaine 27-31 oct
+    add("27/10/2025", "Biophysique")
+    add("27/10/2025", "Biophysique")
+    add("28/10/2025", "Biologie")
+    add("28/10/2025", "Statistiques")
+    add("29/10/2025", "Chimie")
+    add("29/10/2025", "Biophysique")
+    add("30/10/2025", "Chimie")
+    add("30/10/2025", "Biophysique")
+    add("31/10/2025", "Chimie")
+    add("31/10/2025", "Biologie")
+
+    # -------- Novembre 2025 --------
+    # Semaine 3-7 nov
+    add("03/11/2025", "Biophysique")
+    add("03/11/2025", "Biophysique")
+    add("04/11/2025", "Biophysique")
+    add("04/11/2025", "Biologie")
+    add("05/11/2025", "Chimie")
+    add("05/11/2025", "Biologie")
+    add("06/11/2025", "Biologie")
+    add("06/11/2025", "Chimie")
+    add("07/11/2025", "Chimie")
+    add("07/11/2025", "Statistiques")
+
+    # Semaine 10-14 nov
+    add("10/11/2025", "Chimie")
+    add("10/11/2025", "Chimie")
+    # 11/11 : férié
+    add("12/11/2025", "Biologie")
+    add("12/11/2025", "Biophysique")
+    add("13/11/2025", "Chimie")
+    add("13/11/2025", "Biologie")
+    add("14/11/2025", "Chimie")
+    add("14/11/2025", "Biologie")
+
+    # Semaine 17-21 nov
+    add("17/11/2025", "Chimie")
+    add("17/11/2025", "Chimie")
+    add("18/11/2025", "Biologie")
+    add("18/11/2025", "Biologie")
+    add("19/11/2025", "Biologie")
+    add("19/11/2025", "Biophysique")
+    add("20/11/2025", "Chimie")
+    add("20/11/2025", "Biologie")
+    add("21/11/2025", "Chimie")
+    add("21/11/2025", "Biologie")
+
+    # Semaine 24-28 nov
+    add("24/11/2025", "Biologie")
+    add("24/11/2025", "Biophysique")
+    add("25/11/2025", "Chimie")
+    add("25/11/2025", "Biophysique")
+    add("26/11/2025", "Biologie")
+    add("26/11/2025", "Biologie")
+    add("27/11/2025", "Chimie")
+    add("27/11/2025", "Statistiques")
+    add("28/11/2025", "Chimie")
+    add("28/11/2025", "CM inconnus", "Consignes concours")
+
+    # -------- Décembre 2025 --------
+    # Semaine 1-5 déc
+    add("01/12/2025", "Biophysique")
+    add("01/12/2025", "Biologie")
+    add("02/12/2025", "Chimie")
+    add("02/12/2025", "Biophysique")
+    add("03/12/2025", "Chimie")
+    add("03/12/2025", "Biophysique")
+    add("04/12/2025", "Chimie")
+    add("04/12/2025", "Biologie")
+    add("05/12/2025", "Chimie")
+    add("05/12/2025", "Statistiques")
+
+    # Semaine 8-12 déc
+    add("08/12/2025", "Biophysique")
+    add("08/12/2025", "Statistiques")
+    add("09/12/2025", "Chimie")
+    add("09/12/2025", "Biologie")
+    add("10/12/2025", "Biologie")
+    add("10/12/2025", "Biophysique")
+    add("11/12/2025", "Biophysique")
+    add("11/12/2025", "Biologie")
+    add("12/12/2025", "Biophysique")
+    add("12/12/2025", "Biologie")
+
+    # Semaine 15-19 déc
+    add("15/12/2025", "Biophysique")
+    add("15/12/2025", "Biophysique")
+    add("16/12/2025", "Chimie")
+    add("16/12/2025", "Biologie")
+    add("17/12/2025", "Chimie")
+    add("17/12/2025", "Biologie")
+    add("18/12/2025", "Chimie")
+    add("18/12/2025", "Biophysique")
+    add("19/12/2025", "Chimie")
+    add("19/12/2025", "Biophysique")
+
+    # Construction de la structure
+    out: Dict[str, Dict[str, List[Dict]]] = {}
+    counters: Dict[Tuple[str, str, str], int] = {}
+    for dstr, raw_subject, opt_title in rows:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        subject = normalize_from_ups(raw_subject)
+
+        # numérotation CM par sujet et semaine pour des titres propres
+        key = (wlab, subject, dstr)
+        counters[key] = counters.get(key, 0) + 1
+        idx = counters[key]
+
+        title = opt_title if opt_title != f"CM {raw_subject}" else f"CM {raw_subject} {idx}"
+        # si on a mappé vers matière UVSQ, on renomme le titre pour cohérence visuelle
+        if subject != UNKNOWN_SUBJECT and raw_subject != subject:
+            base = subject.split(" – ")[0] if " – " in subject else subject
+            title = f"CM {base} {idx}"
+
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": f"UPS-{dstr}-{subject}-{idx}",
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
+    return out
+
+UPS = build_ups_manual()
 
 # =========================
 # DATA GLOBALE
@@ -408,7 +575,7 @@ left, right = st.columns([3, 1], gap="large")
 with left:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
-    # Semaine (élargi) — on n’affiche plus "Tout décocher"
+    # Semaine (élargi) — pas de "Tout décocher"
     all_weeks = week_ranges(date(2025, 9, 1), date(2026, 1, 4))
     if all_weeks and all_weeks[-1].endswith("04/01/2026"):
         all_weeks[-1] = "29/12/2025 - 04/01/2025"
@@ -421,7 +588,7 @@ with left:
         return all_weeks[0]
 
     # Colonnes: Semaine (large) | Filtre | Tout cocher
-    ctop = st.columns([3.2, 2.0, 1.3])
+    ctop = st.columns([3.4, 2.0, 1.2])
     with ctop[0]:
         st.caption("Semaine")
         week = st.selectbox("Semaine", all_weeks,
@@ -475,7 +642,7 @@ with left:
                 st.markdown('</div>', unsafe_allow_html=True)
 
         render_cell(r1, "UPC")
-        render_cell(r2, "UPS")     # ✅ UPS affiche désormais ses CM parsés
+        render_cell(r2, "UPS")
         render_cell(r3, "UVSQ")
 
     st.markdown('</div>', unsafe_allow_html=True)
@@ -499,7 +666,7 @@ with right:
          "1Croyable2025!"),
         ("UPEC L1 (Crystolink, Ahuna)",
          "https://cristolink.medecine.u-pec.fr/login/index.php",
-         "ahuna.somon@etu.u-pec.fr",  # ✅ update demandé
+         "ahuna.somon@etu.u-pec.fr",  # maj demandée
          "!ObantiAlif20092019!"),
         ("USPN (Moodle, Wiam)",
          "https://ent.univ-paris13.fr",
@@ -524,7 +691,7 @@ with right:
         )
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Sauvegarde localStorage
+# Sauvegarde localStorage (fin de script)
 def _save():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
