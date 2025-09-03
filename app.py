@@ -710,7 +710,8 @@ with left:
                         st.markdown(f'<div class="cell {cell_cls}">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
-                        new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
+                        # ⬇️ libellé demandé : minuscules + blanc via CSS
+                        new_val = st.checkbox("fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
                             # Sauvegarder immédiatement dans localStorage
