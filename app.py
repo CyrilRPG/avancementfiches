@@ -402,6 +402,62 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
 UPS = build_ups_manual()
 
 # =========================
+# UPC — Cours de biologie cellulaire (sept → nov 2025)
+# =========================
+def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
+    # Chaque ligne : (date_dd/mm/YYYY, titre)
+    rows: List[Tuple[str, str]] = []
+    def add(d: str, title: str):
+        rows.append((d, title))
+
+    # -------- Septembre 2025 --------
+    add("04/09/2025", "Organisation de la cellule eucaryote")
+    add("17/09/2025", "Méthodes d'étude de la cellule 1")
+    add("24/09/2025", "Membrane plasmique")
+    add("30/09/2025", "TD1- Généralités, Méthodes d'étude")
+    
+    # -------- Octobre 2025 --------
+    add("01/10/2025", "Apoptose")
+    add("06/10/2025", "TD2- Récepteurs/communication intracellulaires")
+    add("08/10/2025", "Noyau")
+    add("13/10/2025", "TD3- Apoptose")
+    add("15/10/2025", "Bases cellulaires du développement")
+    add("20/10/2025", "TD4- Système endomembranaire/EndoExocytose")
+    add("22/10/2025", "Cycle cellulaire 1")
+    add("27/10/2025", "TD5- Noyau")
+    
+    # -------- Novembre 2025 --------
+    add("03/11/2025", "TD6- Cytosquelette/Jonctions - Intégrines - Matrice")
+    add("10/11/2025", "ED Bases cellulaires du développement")
+    add("17/11/2025", "TD7- Cycle cellulaire")
+
+    # Tri chronologique
+    rows.sort(key=lambda x: parse_fr_date(x[0]))
+
+    out: Dict[str, Dict[str, List[Dict]]] = {}
+    for dstr, title in rows:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+
+        # Sujet normalisé (tous les cours UPC sont en biologie cellulaire)
+        subject = "Biologie cellulaire – Histo-Embryo"
+        
+        # ID stable
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
+
+    return out
+
+UPC = build_upc_manual()
+
+# =========================
 # UVSQ — construit à partir de la liste fournie (sept → nov 2025)
 # =========================
 def subject_short_name(subject: str) -> str:
@@ -505,7 +561,7 @@ UVSQ = build_uvsq_from_list(UPS)
 # DATA GLOBALE
 # =========================
 DATA = {
-    "UPC": {},      # vide pour l’instant
+    "UPC": UPC,
     "UPS": UPS,
     "UVSQ": UVSQ,
 }
