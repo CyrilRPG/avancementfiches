@@ -72,24 +72,24 @@ st.markdown(
       background: {DS_CARD}; border: 1px solid {BORDER};
       border-radius: 16px; padding: 16px;
     }}
-    .cell {
+    .cell {{
       border: 1px solid {BORDER};
       border-radius: 12px; padding: 10px; margin-bottom: 10px;
       background: rgba(255,255,255,.03);
-    }
+    }}
     /* Couleurs par plateforme */
-    .cell-upc  { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.18); }
-    .cell-ups  { background: rgba(89,168,216,.10); border-color: rgba(89,168,216,.38); }
-    .cell-uvsq { background: rgba(144,238,144,.12); border-color: rgba(144,238,144,.38); }
-    .subject { color:#f3f6fb; font-weight: 700; }
-    .muted { color: {MUTED}; }
-    .mini  { font-size: 0.82rem; color:{MUTED}; }
-    .small { font-size: 0.92rem; }
-    .table-head {
+    .cell-upc  {{ background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.18); }}
+    .cell-ups  {{ background: rgba(89,168,216,.10); border-color: rgba(89,168,216,.38); }}
+    .cell-uvsq {{ background: rgba(144,238,144,.12); border-color: rgba(144,238,144,.38); }}
+    .subject {{ color:#f3f6fb; font-weight: 700; }}
+    .muted {{ color: {MUTED}; }}
+    .mini  {{ font-size: 0.82rem; color:{MUTED}; }}
+    .small {{ font-size: 0.92rem; }}
+    .table-head {{
       font-weight:700; color:#f2f6fb; letter-spacing:.25px;
       border-bottom:1px solid {BORDER}; padding:10px 8px;
       background: rgba(255,255,255,.03); border-radius: 10px;
-    }
+    }}
     .rowline {{ border-bottom:1px dashed {BORDER}; padding:10px 8px; }}
     .fac-head {{
       display:flex; justify-content:center; align-items:center;
