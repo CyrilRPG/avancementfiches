@@ -412,24 +412,25 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
 
     # -------- Septembre 2025 --------
     add("04/09/2025", "Organisation de la cellule eucaryote")
-    add("17/09/2025", "Méthodes d'étude de la cellule 1")
-    add("24/09/2025", "Membrane plasmique")
-    add("30/09/2025", "TD1- Généralités, Méthodes d'étude")
+    add("08/09/2025", "Méthodes d'étude de la cellule 1")
+    add("15/09/2025", "Méthodes d'étude de la cellule 2")
+    add("17/09/2025", "Membrane plasmique")
+    add("22/09/2025", "Récepteurs / médiateurs")
+    add("29/09/2025", "Communication intercellulaire")
     
     # -------- Octobre 2025 --------
     add("01/10/2025", "Apoptose")
-    add("06/10/2025", "TD2- Récepteurs/communication intracellulaires")
-    add("08/10/2025", "Noyau")
-    add("13/10/2025", "TD3- Apoptose")
-    add("15/10/2025", "Bases cellulaires du développement")
-    add("20/10/2025", "TD4- Système endomembranaire/EndoExocytose")
-    add("22/10/2025", "Cycle cellulaire 1")
-    add("27/10/2025", "TD5- Noyau")
+    add("07/10/2025", "Mitochondrie et péroxysomes")
+    add("14/10/2025", "Système endo-membranaire - trafic intracellulaire")
+    add("21/10/2025", "Endo- et exocytose")
+    add("28/10/2025", "Noyau")
     
     # -------- Novembre 2025 --------
-    add("03/11/2025", "TD6- Cytosquelette/Jonctions - Intégrines - Matrice")
-    add("10/11/2025", "ED Bases cellulaires du développement")
-    add("17/11/2025", "TD7- Cycle cellulaire")
+    add("04/11/2025", "Cytosquelette")
+    add("06/11/2025", "Jonctions - intégrines - matrice extracellulaire")
+    add("14/11/2025", "Bases cellulaires du développement")
+    add("20/11/2025", "Cycle cellulaire 1")
+    add("24/11/2025", "Cycle cellulaire 2")
 
     # Tri chronologique
     rows.sort(key=lambda x: parse_fr_date(x[0]))
