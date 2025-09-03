@@ -81,6 +81,21 @@ st.markdown(
     .cell-upc  {{ background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.18); }}
     .cell-ups  {{ background: rgba(89,168,216,.10); border-color: rgba(89,168,216,.38); }}
     .cell-uvsq {{ background: rgba(144,238,144,.12); border-color: rgba(144,238,144,.38); }}
+    
+    /* Blocs colorés pour les cours */
+    .course-block {{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    }}
+    
+    /* Réduire l'espace entre contrôles et tableau */
+    .controls-tableau {{
+      margin-bottom: 8px;
+    }}
     .subject {{ color:#f3f6fb; font-weight: 700; }}
     .muted {{ color: {MUTED}; }}
     .mini  {{ font-size: 0.82rem; color:{MUTED}; }}
@@ -619,18 +634,7 @@ SUBJECTS = subjects_sorted_by_frequency()
 def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
 
 if "loaded_from_localstorage" not in st.session_state:
-    raw = streamlit_js_eval(
-        js_expressions="localStorage.getItem('ds_progress')",
-        want_output=True,
-        key="load-store"
-    )
-    try:
-        if raw:
-            saved = json.loads(raw)
-            for kk, vv in saved.items():
-                st.session_state[kk] = vv
-    except Exception:
-        pass
+    # Initialiser les états des checkboxes
     st.session_state.loaded_from_localstorage = True
 
 def save_to_localstorage_once():
@@ -722,7 +726,7 @@ with left:
                         ck = k(fac, subj, week, cid)
                         checked = st.session_state.get(ck, False)
                         cell_cls = 'cell-upc' if fac == 'UPC' else ('cell-ups' if fac == 'UPS' else 'cell-uvsq')
-                        st.markdown(f'<div class="cell {cell_cls}">', unsafe_allow_html=True)
+                        st.markdown(f'<div class="cell {cell_cls} course-block">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
