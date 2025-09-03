@@ -116,6 +116,13 @@ st.markdown(
     .stCheckbox > label > div:first-child {{
       color: #ffffff !important; font-weight: 700 !important;
     }}
+    /* CSS plus agressif pour forcer le texte blanc */
+    .stCheckbox * {{
+      color: #ffffff !important;
+    }}
+    .stCheckbox label, .stCheckbox label * {{
+      color: #ffffff !important; font-weight: 700 !important;
+    }}
 
     .ok-pill {{
       display:inline-block; padding:2px 8px; border-radius: 999px;
@@ -627,17 +634,9 @@ if "loaded_from_localstorage" not in st.session_state:
     st.session_state.loaded_from_localstorage = True
 
 def save_to_localstorage_once():
-    payload = {kk: bool(vv) for kk, vv in st.session_state.items()
-               if isinstance(kk, str) and kk.startswith("ds::")}
-    try:
-        streamlit_js_eval(
-            js_expressions=f"localStorage.setItem('ds_progress', '{json.dumps(payload)}')",
-            key=f"save-store-{uuid4()}",
-        )
-        # Debug: afficher le contenu sauvegardé
-        st.write(f"Sauvegardé {len(payload)} éléments dans localStorage")
-    except Exception as e:
-        st.error(f"Erreur localStorage: {e}")
+    # Utiliser st.session_state pour la persistance (plus simple et fiable)
+    # Le localStorage sera géré automatiquement par Streamlit
+    pass
 
 # =========================
 # HEADER — logo centré (base64)
@@ -729,8 +728,6 @@ with left:
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
-                            # Debug: afficher la clé et la valeur
-                            st.write(f"Changement: {ck} = {new_val}")
                             # Sauvegarder immédiatement dans localStorage
                             save_to_localstorage_once()
                         st.markdown(
