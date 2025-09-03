@@ -72,20 +72,24 @@ st.markdown(
       background: {DS_CARD}; border: 1px solid {BORDER};
       border-radius: 16px; padding: 16px;
     }}
-    .cell {{
+    .cell {
       border: 1px solid {BORDER};
       border-radius: 12px; padding: 10px; margin-bottom: 10px;
       background: rgba(255,255,255,.03);
-    }}
-    .subject {{ color:#f3f6fb; font-weight: 700; }}
-    .muted {{ color: {MUTED}; }}
-    .mini  {{ font-size: 0.82rem; color:{MUTED}; }}
-    .small {{ font-size: 0.92rem; }}
-    .table-head {{
+    }
+    /* Couleurs par plateforme */
+    .cell-upc  { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.18); }
+    .cell-ups  { background: rgba(89,168,216,.10); border-color: rgba(89,168,216,.38); }
+    .cell-uvsq { background: rgba(144,238,144,.12); border-color: rgba(144,238,144,.38); }
+    .subject { color:#f3f6fb; font-weight: 700; }
+    .muted { color: {MUTED}; }
+    .mini  { font-size: 0.82rem; color:{MUTED}; }
+    .small { font-size: 0.92rem; }
+    .table-head {
       font-weight:700; color:#f2f6fb; letter-spacing:.25px;
       border-bottom:1px solid {BORDER}; padding:10px 8px;
       background: rgba(255,255,255,.03); border-radius: 10px;
-    }}
+    }
     .rowline {{ border-bottom:1px dashed {BORDER}; padding:10px 8px; }}
     .fac-head {{
       display:flex; justify-content:center; align-items:center;
@@ -459,21 +463,10 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
             return "Physique – Biophysique"
         return UNKNOWN_SUBJECT
 
-    # Compter déjà présent dans UPS par matière (pour numérotation continue)
-    # On ne compte que les éléments appartenant à la matière (pas "CM inconnus").
-    base_counts: Dict[str, int] = {}
-    for week_map in ups_data.values():
-        for subj, items in week_map.items():
-            if subj != UNKNOWN_SUBJECT:
-                base_counts[subj] = base_counts.get(subj, 0) + len(items)
-
-    # Construire UVSQ avec titres numérotés à la suite
+    # Pour UVSQ: numérotation démarre à 1 pour chaque matière (indépendante de UPS)
     out: Dict[str, Dict[str, List[Dict]]] = {}
-    # Tri des jours chronologiquement
     raw_plan.sort(key=lambda x: parse_fr_date(x[0]))
-
-    # Pointeurs de numérotation par sujet
-    seq: Dict[str, int] = dict(base_counts)
+    seq: Dict[str, int] = {}
 
     for dstr, entries in raw_plan:
         d = parse_fr_date(dstr)
@@ -481,19 +474,17 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
         for kind, detail in entries:
             subject = kind_to_subject(kind)
 
+            seq.setdefault(subject, 0)
+            seq[subject] += 1
+            num = seq[subject]
+
             if subject == UNKNOWN_SUBJECT:
-                seq.setdefault(subject, 0)
-                seq[subject] += 1
-                num = seq[subject]
                 title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
             else:
-                seq.setdefault(subject, 0)
-                seq[subject] += 1
-                num = seq[subject]
+                # Affichage UVSQ personnalisé: bio/histo/embryo => "Biocell - Histo - Embryo"
                 short = subject_short_name(subject)
-                # Normalisation d'affichage: écrire "Biologie cellulaire" pour bio/histo/embryo
                 if subject == "Biologie cellulaire – Histo-Embryo":
-                    short = "Biologie cellulaire"
+                    short = "Biocell - Histo - Embryo"
                 title = f"{short} {num}"
 
             safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
@@ -653,7 +644,8 @@ with left:
                         cid = it.get("id") or it["title"]
                         ck = k(fac, subj, week, cid)
                         checked = st.session_state.get(ck, False)
-                        st.markdown('<div class="cell">', unsafe_allow_html=True)
+                        cell_cls = 'cell-upc' if fac == 'UPC' else ('cell-ups' if fac == 'UPS' else 'cell-uvsq')
+                        st.markdown(f'<div class="cell {cell_cls}">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
