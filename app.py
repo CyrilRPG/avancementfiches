@@ -102,6 +102,9 @@ st.markdown(
     div.stCheckbox > label > div[data-testid="stMarkdownContainer"] p {{
       color: #ffffff !important; font-weight: 700 !important;
     }}
+    div.stCheckbox > label {{
+      color: #ffffff !important; font-weight: 700 !important;
+    }}
 
     .ok-pill {{
       display:inline-block; padding:2px 8px; border-radius: 999px;
@@ -674,6 +677,8 @@ with left:
                 for subj, items in DATA[fac].get(week, {}).items():
                     for it in items:
                         st.session_state[k(fac, subj, week, it["id"])] = True
+            # Sauvegarder immédiatement dans localStorage
+            save_to_localstorage_once()
             st.success("Toutes les cases de la semaine sont cochées.")
 
     st.divider()
@@ -708,6 +713,8 @@ with left:
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
+                            # Sauvegarder immédiatement dans localStorage
+                            save_to_localstorage_once()
                         st.markdown(
                             f"<span class='ok-pill'>{'OK' if new_val else 'À faire'}</span>",
                             unsafe_allow_html=True,
@@ -768,4 +775,4 @@ with right:
 # =========================
 # Sauvegarde localStorage (une seule fois)
 # =========================
-save_to_localstorage_once()
+# La sauvegarde se fait maintenant immédiatement lors des changements
