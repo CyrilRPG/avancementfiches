@@ -410,72 +410,62 @@ def subject_short_name(subject: str) -> str:
     return "CM inconnu"
 
 def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str, Dict[str, List[Dict]]]:
-    # Entrées issues du message utilisateur, par date, avec duplications explicites
-    # Format pour entries: (kind, detail)
-    # kind in {"bio", "chimie", "phys", "unknown"}
+    # Chaque ligne utilisateur compte pour 1 cours dans la catégorie correspondante.
+    # kind in {"biohe", "chimiebioch", "phys", "unknown"}
     raw_plan: List[Tuple[str, List[Tuple[str, Optional[str]]]]] = []
 
     def add_day(d: str, entries: List[Tuple[str, Optional[str]]]):
         raw_plan.append((d, entries))
 
     # Septembre 2025
-    add_day("02/09/2025", [("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
-    add_day("03/09/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
-    add_day("08/09/2025", [("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
-    add_day("09/09/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
-    add_day("10/09/2025", [("chimie", None), ("biochimie", None)])
-    add_day("15/09/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
-    add_day("16/09/2025", [("chimie", None), ("biochimie", None), ("phys", None), ("phys", None)])
-    add_day("17/09/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
-    add_day("22/09/2025", [
-        ("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None),
-        ("bio", None), ("histo", None), ("embryo", None),
-        ("chimie", None), ("biochimie", None),
-        ("bio", None), ("histo", None), ("embryo", None),
-    ])
-    add_day("23/09/2025", [
-        ("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None)
-    ])
-    add_day("24/09/2025", [("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
-    add_day("29/09/2025", [("phys", None), ("phys", None), ("histo", None), ("embryo", None), ("histo", None), ("embryo", None)])
-    add_day("30/09/2025", [("phys", None), ("phys", None), ("histo", None), ("embryo", None), ("histo", None), ("embryo", None)])
+    add_day("02/09/2025", [("chimiebioch", None), ("biohe", None)])
+    add_day("03/09/2025", [("biohe", None), ("chimiebioch", None)])
+    add_day("08/09/2025", [("chimiebioch", None), ("biohe", None)])
+    add_day("09/09/2025", [("biohe", None), ("chimiebioch", None), ("biohe", None)])
+    add_day("10/09/2025", [("chimiebioch", None)])
+    add_day("15/09/2025", [("chimiebioch", None), ("chimiebioch", None), ("biohe", None)])
+    add_day("16/09/2025", [("chimiebioch", None), ("phys", None)])
+    add_day("17/09/2025", [("biohe", None), ("chimiebioch", None)])
+    add_day("22/09/2025", [("biohe", None), ("chimiebioch", None), ("biohe", None), ("chimiebioch", None), ("biohe", None)])
+    add_day("23/09/2025", [("biohe", None), ("chimiebioch", None), ("chimiebioch", None)])
+    add_day("24/09/2025", [("biohe", None), ("chimiebioch", None)])
+    add_day("29/09/2025", [("phys", None), ("biohe", None), ("biohe", None)])
+    add_day("30/09/2025", [("phys", None), ("phys", None), ("biohe", None), ("biohe", None)])
     # Octobre 2025
     add_day("01/10/2025", [("unknown", None)])
-    add_day("06/10/2025", [
-        ("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None),
-        ("bio", None), ("histo", None), ("embryo", None),
-        ("bio", None), ("histo", None), ("embryo", None),
-    ])
-    add_day("07/10/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None)])
-    add_day("08/10/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
-    add_day("13/10/2025", [("bio", None), ("histo", None), ("embryo", None), ("bio", None), ("histo", None), ("embryo", None)])
-    add_day("14/10/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
-    add_day("15/10/2025", [("bio", None), ("histo", None), ("embryo", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("06/10/2025", [("biohe", None), ("chimiebioch", None), ("biohe", None), ("biohe", None)])
+    add_day("07/10/2025", [("chimiebioch", None), ("chimiebioch", None), ("chimiebioch", None)])
+    add_day("08/10/2025", [("biohe", None), ("chimiebioch", None)])
+    add_day("13/10/2025", [("biohe", None), ("biohe", None)])
+    add_day("14/10/2025", [("chimiebioch", None), ("chimiebioch", None), ("biohe", None)])
+    add_day("15/10/2025", [("biohe", None), ("biohe", None)])
     add_day("27/10/2025", [("unknown", "10 heures")])
     add_day("28/10/2025", [("unknown", "10 heures")])
     add_day("29/10/2025", [("unknown", "4 heures")])
     # Novembre 2025
     add_day("03/11/2025", [("phys", None)])
-    add_day("04/11/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None)])
+    add_day("04/11/2025", [("chimiebioch", None), ("chimiebioch", None)])
     add_day("05/11/2025", [("unknown", "4 heures")])
-    add_day("10/11/2025", [("bio", None), ("histo", None), ("embryo", None), ("phys", None)])
+    add_day("10/11/2025", [("biohe", None), ("phys", None)])
     add_day("11/11/2025", [("unknown", "10 heures")])
 
     # Regroupement par catégories communes
     def kind_to_subject(k: str) -> str:
-        if k in ("bio", "histo", "embryo"):
+        if k == "biohe":
             return "Biologie cellulaire – Histo-Embryo"
-        if k in ("chimie", "biochimie"):
+        if k == "chimiebioch":
             return "Chimie – Biochimie"
         if k == "phys":
             return "Physique – Biophysique"
         return UNKNOWN_SUBJECT
 
     # Compter déjà présent dans UPS par matière (pour numérotation continue)
+    # On ne compte que les éléments appartenant à la matière (pas "CM inconnus").
     base_counts: Dict[str, int] = {}
     for week_map in ups_data.values():
         for subj, items in week_map.items():
-            base_counts[subj] = base_counts.get(subj, 0) + len(items)
+            if subj != UNKNOWN_SUBJECT:
+                base_counts[subj] = base_counts.get(subj, 0) + len(items)
 
     # Construire UVSQ avec titres numérotés à la suite
     out: Dict[str, Dict[str, List[Dict]]] = {}
@@ -501,6 +491,9 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
                 seq[subject] += 1
                 num = seq[subject]
                 short = subject_short_name(subject)
+                # Normalisation d'affichage: écrire "Biologie cellulaire" pour bio/histo/embryo
+                if subject == "Biologie cellulaire – Histo-Embryo":
+                    short = "Biologie cellulaire"
                 title = f"{short} {num}"
 
             safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
@@ -695,7 +688,7 @@ with right:
         ("UVSQ (e campus, Zineb)",
          "https://www.uvsq.fr/ufr-des-sciences-de-la-sante-simone-veil",
          "22506082",
-         "1Croyable2025!"),
+         "1Croy@able2025!"),
         ("UPEC L1 (Crystolink, Ahuna)",
          "https://cristolink.medecine.u-pec.fr/login/index.php",
          "ahuna.somon@etu.u-pec.fr",
