@@ -105,6 +105,17 @@ st.markdown(
     div.stCheckbox > label {{
       color: #ffffff !important; font-weight: 700 !important;
     }}
+    /* Forcer le texte des checkboxes en blanc */
+    .stCheckbox label {{
+      color: #ffffff !important; font-weight: 700 !important;
+    }}
+    .stCheckbox label span {{
+      color: #ffffff !important; font-weight: 700 !important;
+    }}
+    /* Cibler spécifiquement le texte "Fiche déjà faite" */
+    .stCheckbox > label > div:first-child {{
+      color: #ffffff !important; font-weight: 700 !important;
+    }}
 
     .ok-pill {{
       display:inline-block; padding:2px 8px; border-radius: 999px;
@@ -618,10 +629,15 @@ if "loaded_from_localstorage" not in st.session_state:
 def save_to_localstorage_once():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
-    streamlit_js_eval(
-        js_expressions=f"localStorage.setItem('ds_progress', '{json.dumps(payload)}')",
-        key=f"save-store-{uuid4()}",
-    )
+    try:
+        streamlit_js_eval(
+            js_expressions=f"localStorage.setItem('ds_progress', '{json.dumps(payload)}')",
+            key=f"save-store-{uuid4()}",
+        )
+        # Debug: afficher le contenu sauvegardé
+        st.write(f"Sauvegardé {len(payload)} éléments dans localStorage")
+    except Exception as e:
+        st.error(f"Erreur localStorage: {e}")
 
 # =========================
 # HEADER — logo centré (base64)
@@ -710,10 +726,11 @@ with left:
                         st.markdown(f'<div class="cell {cell_cls}">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
-                        # ⬇️ libellé demandé : minuscules + blanc via CSS
-                        new_val = st.checkbox("fiche déjà faite", value=checked, key=ck)
+                        new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
+                            # Debug: afficher la clé et la valeur
+                            st.write(f"Changement: {ck} = {new_val}")
                             # Sauvegarder immédiatement dans localStorage
                             save_to_localstorage_once()
                         st.markdown(
