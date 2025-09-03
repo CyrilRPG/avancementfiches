@@ -199,26 +199,6 @@ def add_item(dst: Dict[str, Dict[str, List[Dict]]], week_label: str,
     })
 
 UVSQ: Dict[str, Dict[str, List[Dict]]] = {}
-# (Extraits CM uniquement pour illustrer — tu pourras compléter si besoin)
-add_item(UVSQ, "01/09/2025 - 07/09/2025", "CM (intitulé non précisé)", "03/09/2025", cid="UVSQ-CM-1")
-add_item(UVSQ, "08/09/2025 - 14/09/2025", "CM Biologie cellulaire – Histo Embryo", "08/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-1")
-add_item(UVSQ, "15/09/2025 - 21/09/2025", "CM Biologie cellulaire – Histo Embryo", "17/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-2")
-add_item(UVSQ, "22/09/2025 - 28/09/2025", "CM Biologie cellulaire – Histo Embryo", "22/09/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-3")
-add_item(UVSQ, "29/09/2025 - 05/10/2025", "CM Physique – Biophysique", "30/09/2025",
-         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-1")
-add_item(UVSQ, "06/10/2025 - 12/10/2025", "CM Biologie cellulaire – Histo Embryo", "06/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-5")
-add_item(UVSQ, "13/10/2025 - 19/10/2025", "CM Biologie cellulaire – Histo Embryo", "13/10/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-7")
-add_item(UVSQ, "27/10/2025 - 02/11/2025", "CM (intitulé non précisé)", "27/10/2025", cid="UVSQ-CM-6")
-add_item(UVSQ, "03/11/2025 - 09/11/2025", "CM Physique – Biophysique", "07/11/2025",
-         explicit_subject="Physique – Biophysique", cid="UVSQ-PHYS-2")
-add_item(UVSQ, "10/11/2025 - 16/11/2025", "CM Biologie cellulaire – Histo Embryo", "10/11/2025",
-         explicit_subject="Biologie cellulaire – Histo-Embryo", cid="UVSQ-BIO-9")
-add_item(UVSQ, "17/11/2025 - 23/11/2025", "CM (intitulé non précisé)", "17/11/2025", cid="UVSQ-CM-10")
 
 # =========================
 # UPS — REMPLACÉ par la NOUVELLE LISTE fournie (sept → nov 2025)
@@ -416,6 +396,126 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     return out
 
 UPS = build_ups_manual()
+
+# =========================
+# UVSQ — construit à partir de la liste fournie (sept → nov 2025)
+# =========================
+def subject_short_name(subject: str) -> str:
+    if subject == "Biologie cellulaire – Histo-Embryo":
+        return "Biologie cellulaire"
+    if subject == "Chimie – Biochimie":
+        return "Chimie – Biochimie"
+    if subject == "Physique – Biophysique":
+        return "Physique – Biophysique"
+    return "CM inconnu"
+
+def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str, Dict[str, List[Dict]]]:
+    # Entrées issues du message utilisateur, par date, avec duplications explicites
+    # Format pour entries: (kind, detail)
+    # kind in {"bio", "chimie", "phys", "unknown"}
+    raw_plan: List[Tuple[str, List[Tuple[str, Optional[str]]]]] = []
+
+    def add_day(d: str, entries: List[Tuple[str, Optional[str]]]):
+        raw_plan.append((d, entries))
+
+    # Septembre 2025
+    add_day("02/09/2025", [("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("03/09/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
+    add_day("08/09/2025", [("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("09/09/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("10/09/2025", [("chimie", None), ("biochimie", None)])
+    add_day("15/09/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("16/09/2025", [("chimie", None), ("biochimie", None), ("phys", None), ("phys", None)])
+    add_day("17/09/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
+    add_day("22/09/2025", [
+        ("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None),
+        ("bio", None), ("histo", None), ("embryo", None),
+        ("chimie", None), ("biochimie", None),
+        ("bio", None), ("histo", None), ("embryo", None),
+    ])
+    add_day("23/09/2025", [
+        ("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None)
+    ])
+    add_day("24/09/2025", [("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
+    add_day("29/09/2025", [("phys", None), ("phys", None), ("histo", None), ("embryo", None), ("histo", None), ("embryo", None)])
+    add_day("30/09/2025", [("phys", None), ("phys", None), ("histo", None), ("embryo", None), ("histo", None), ("embryo", None)])
+    # Octobre 2025
+    add_day("01/10/2025", [("unknown", None)])
+    add_day("06/10/2025", [
+        ("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None),
+        ("bio", None), ("histo", None), ("embryo", None),
+        ("bio", None), ("histo", None), ("embryo", None),
+    ])
+    add_day("07/10/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None)])
+    add_day("08/10/2025", [("bio", None), ("histo", None), ("embryo", None), ("chimie", None), ("biochimie", None)])
+    add_day("13/10/2025", [("bio", None), ("histo", None), ("embryo", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("14/10/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("15/10/2025", [("bio", None), ("histo", None), ("embryo", None), ("bio", None), ("histo", None), ("embryo", None)])
+    add_day("27/10/2025", [("unknown", "10 heures")])
+    add_day("28/10/2025", [("unknown", "10 heures")])
+    add_day("29/10/2025", [("unknown", "4 heures")])
+    # Novembre 2025
+    add_day("03/11/2025", [("phys", None)])
+    add_day("04/11/2025", [("chimie", None), ("biochimie", None), ("chimie", None), ("biochimie", None)])
+    add_day("05/11/2025", [("unknown", "4 heures")])
+    add_day("10/11/2025", [("bio", None), ("histo", None), ("embryo", None), ("phys", None)])
+    add_day("11/11/2025", [("unknown", "10 heures")])
+
+    # Regroupement par catégories communes
+    def kind_to_subject(k: str) -> str:
+        if k in ("bio", "histo", "embryo"):
+            return "Biologie cellulaire – Histo-Embryo"
+        if k in ("chimie", "biochimie"):
+            return "Chimie – Biochimie"
+        if k == "phys":
+            return "Physique – Biophysique"
+        return UNKNOWN_SUBJECT
+
+    # Compter déjà présent dans UPS par matière (pour numérotation continue)
+    base_counts: Dict[str, int] = {}
+    for week_map in ups_data.values():
+        for subj, items in week_map.items():
+            base_counts[subj] = base_counts.get(subj, 0) + len(items)
+
+    # Construire UVSQ avec titres numérotés à la suite
+    out: Dict[str, Dict[str, List[Dict]]] = {}
+    # Tri des jours chronologiquement
+    raw_plan.sort(key=lambda x: parse_fr_date(x[0]))
+
+    # Pointeurs de numérotation par sujet
+    seq: Dict[str, int] = dict(base_counts)
+
+    for dstr, entries in raw_plan:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        for kind, detail in entries:
+            subject = kind_to_subject(kind)
+
+            if subject == UNKNOWN_SUBJECT:
+                seq.setdefault(subject, 0)
+                seq[subject] += 1
+                num = seq[subject]
+                title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
+            else:
+                seq.setdefault(subject, 0)
+                seq[subject] += 1
+                num = seq[subject]
+                short = subject_short_name(subject)
+                title = f"{short} {num}"
+
+            safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+            safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+            item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+
+            out.setdefault(wlab, {}).setdefault(subject, []).append({
+                "id": item_id,
+                "title": title,
+                "date": d.strftime("%d/%m/%Y"),
+            })
+
+    return out
+
+UVSQ = build_uvsq_from_list(UPS)
 
 # =========================
 # DATA GLOBALE
