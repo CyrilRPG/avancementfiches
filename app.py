@@ -89,18 +89,9 @@ def save_progress():
     up_records = []
     for key, val in payload.items():
         try:
-            parts = key.split("::")
-            fac = parts[1] if len(parts) > 1 else ""
-            subj = parts[2] if len(parts) > 2 else ""
-            week_lbl = parts[3] if len(parts) > 3 else ""
-            item_id = parts[4] if len(parts) > 4 else ""
             up_records.append({
                 "Key": key,
                 "Checked": bool(val),
-                "Faculty": fac,
-                "Subject": subj,
-                "Week": week_lbl,
-                "Item ID": item_id,
             })
         except Exception:
             continue
