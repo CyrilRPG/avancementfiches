@@ -8,12 +8,12 @@ from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
-from streamlit_cookies_manager import EncryptedCookieManager
+# from streamlit_cookies_manager import EncryptedCookieManager  # removed
 
-# Cookie manager (persist across sessions reliably)
-COOKIES = EncryptedCookieManager(prefix="ds_")
-if not COOKIES.ready():
-    st.stop()
+# Cookie manager removed — rely on URL param + optional manual export/import
+# COOKIES = EncryptedCookieManager(prefix="ds_")
+# if not COOKIES.ready():
+#     st.stop()
 
 # Helpers for URL-based persistence
 
@@ -796,16 +796,6 @@ SUBJECTS = subjects_sorted_by_frequency()
 def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
 
 if "loaded_from_localstorage" not in st.session_state:
-    # Try Cookie first
-    try:
-        raw_cookie = COOKIES.get("progress")
-        if raw_cookie:
-            saved = json.loads(raw_cookie)
-            for kk, vv in saved.items():
-                st.session_state[kk] = vv
-    except Exception:
-        pass
-
     # Try URL query params
     params = st.experimental_get_query_params()
     b64 = params.get("p", [""])[0]
@@ -832,10 +822,7 @@ if "loaded_from_localstorage" not in st.session_state:
 def save_progress():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
-    # Persist into cookie
-    COOKIES["progress"] = json.dumps(payload)
-    COOKIES.save()
-    # Also persist into URL param
+    # Persist into URL param
     st.experimental_set_query_params(p=_encode_progress(payload))
     # Best-effort localStorage
     try:
@@ -903,6 +890,27 @@ with left:
                         st.session_state[k(fac, subj, week, it["id"])] = True
             save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
+        # Export / Import / Reset
+        payload = {kk: bool(vv) for kk, vv in st.session_state.items() if isinstance(kk, str) and kk.startswith("ds::")}
+        st.download_button("Exporter état", data=json.dumps(payload, indent=2), file_name="ds_progress.json", use_container_width=True)
+        up = st.file_uploader("Importer état", type=["json"], label_visibility="collapsed")
+        if up is not None:
+            try:
+                imported = json.loads(up.read().decode("utf-8"))
+                if isinstance(imported, dict):
+                    for kk, vv in imported.items():
+                        if isinstance(kk, str) and kk.startswith("ds::"):
+                            st.session_state[kk] = bool(vv)
+                    save_progress()
+                    st.success("État importé.")
+            except Exception:
+                st.error("Fichier invalide.")
+        if st.button("Réinitialiser", use_container_width=True):
+            for kk in list(st.session_state.keys()):
+                if isinstance(kk, str) and kk.startswith("ds::"):
+                    st.session_state[kk] = False
+            save_progress()
+            st.success("Réinitialisé.")
 
     st.divider()
 
