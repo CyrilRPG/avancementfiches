@@ -11,10 +11,15 @@ from streamlit_js_eval import streamlit_js_eval
 import requests
 import urllib.parse
 
-AIRTABLE_BASE_ID = "appjJYScCpxoQ6F52"
-AIRTABLE_TABLE = st.secrets.get("AIRTABLE_TABLE", "progress")
-AIRTABLE_TOKEN = st.secrets.get("AIRTABLE_TOKEN", "sk_live_5d8e2f4a9c3b4a6e8f2b1c7d4e5f6a7b")
-# URL-encode table name to support spaces/accents/dashes
+# ===== Airtable (minimal, required via secrets) =====
+try:
+    AIRTABLE_BASE_ID = "appjJYScCpxoQ6F52"
+    AIRTABLE_TABLE = st.secrets["AIRTABLE_TABLE"]  # ex: "progress" ou Table ID tbl...
+    AIRTABLE_TOKEN = st.secrets["AIRTABLE_TOKEN"]  # PAT "pat..."
+except KeyError:
+    st.error("Secrets manquants: définis AIRTABLE_TABLE et AIRTABLE_TOKEN dans secrets.")
+    st.stop()
+
 _airtable_table_path = urllib.parse.quote(AIRTABLE_TABLE, safe="")
 AIRTABLE_API = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{_airtable_table_path}"
 
@@ -45,10 +50,8 @@ def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
     out: Dict[str, bool] = {}
     if not keys:
         return out
-    # Airtable URL length/complexity: chunk by 30 keys
     for i in range(0, len(keys), 30):
         chunk = keys[i:i+30]
-        # Escape double quotes inside keys
         esc = [k.replace('"', '\\"') for k in chunk]
         quoted = ",".join([f'{{Key}}="{k}"' for k in esc])
         formula = f"OR({quoted})"
@@ -73,30 +76,35 @@ def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
             continue
     return out
 
-# Cookie manager removed — rely on URL param + optional manual export/import
-# COOKIES = EncryptedCookieManager(prefix="ds_")
-# if not COOKIES.ready():
-#     st.stop()
-
-# Persistent storage file (automatic, no user action needed)
-PROGRESS_FILE = "progress.json"
-
-# Helpers for URL-based persistence
-
-def _encode_progress(d: Dict[str, bool]) -> str:
-    raw = json.dumps(d).encode("utf-8")
-    return base64.urlsafe_b64encode(raw).decode("ascii")
+# =========================
+# (Supprimé) Chargements locaux/URL/localStorage — Airtable only
+# =========================
+if "progress_loaded_minimal" not in st.session_state:
+    st.session_state.progress_loaded_minimal = True
 
 
-def _decode_progress(s: str) -> Dict[str, bool]:
-    try:
-        raw = base64.urlsafe_b64decode(s.encode("ascii"))
-        obj = json.loads(raw.decode("utf-8"))
-        if isinstance(obj, dict):
-            return {k: bool(v) for k, v in obj.items() if isinstance(k, str)}
-    except Exception:
-        pass
-    return {}
+def save_progress():
+    payload = {kk: bool(vv) for kk, vv in st.session_state.items()
+               if isinstance(kk, str) and kk.startswith("ds::")}
+    up_records = []
+    for key, val in payload.items():
+        try:
+            parts = key.split("::")
+            fac = parts[1] if len(parts) > 1 else ""
+            subj = parts[2] if len(parts) > 2 else ""
+            week_lbl = parts[3] if len(parts) > 3 else ""
+            item_id = parts[4] if len(parts) > 4 else ""
+            up_records.append({
+                "Key": key,
+                "Checked": bool(val),
+                "Faculty": fac,
+                "Subject": subj,
+                "Week": week_lbl,
+                "Item ID": item_id,
+            })
+        except Exception:
+            continue
+    airtable_upsert(up_records)
 
 # =========================
 # CONFIG
@@ -857,93 +865,6 @@ def subjects_sorted_by_frequency() -> List[str]:
 SUBJECTS = subjects_sorted_by_frequency()
 
 # =========================
-# PERSISTENCE localStorage
-# =========================
-def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
-
-if "loaded_from_localstorage" not in st.session_state:
-    # 1) Load from file if present
-    try:
-        if os.path.exists(PROGRESS_FILE):
-            with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
-                saved = json.load(f)
-            if isinstance(saved, dict):
-                for kk, vv in saved.items():
-                    if isinstance(kk, str):
-                        st.session_state[kk] = bool(vv)
-    except Exception:
-        pass
-
-    # 2) Try URL query params
-    params = st.experimental_get_query_params()
-    b64 = params.get("p", [""])[0]
-    restored = _decode_progress(b64) if b64 else {}
-    for kk, vv in restored.items():
-        st.session_state[kk] = vv
-
-    # 3) Best-effort: legacy localStorage (no-op if not available)
-    try:
-        raw = streamlit_js_eval(
-            js_expressions="localStorage.getItem('ds_progress')",
-            want_output=True,
-            key="load-store"
-        )
-        if raw:
-            saved = json.loads(raw)
-            for kk, vv in saved.items():
-                st.session_state[kk] = vv
-    except Exception:
-        pass
-    st.session_state.loaded_from_localstorage = True
-
-
-def save_progress():
-    payload = {kk: bool(vv) for kk, vv in st.session_state.items()
-               if isinstance(kk, str) and kk.startswith("ds::")}
-    # 1) Save to file (automatic persistence)
-    try:
-        with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False)
-    except Exception:
-        pass
-    # 1b) Save to Airtable (upsert)
-    up_records = []
-    for key, val in payload.items():
-        try:
-            # key format: ds::FAC::SUBJ::WEEK::ITEM
-            parts = key.split("::")
-            fac = parts[1] if len(parts) > 1 else ""
-            subj = parts[2] if len(parts) > 2 else ""
-            week_lbl = parts[3] if len(parts) > 3 else ""
-            item_id = parts[4] if len(parts) > 4 else ""
-            up_records.append({
-                "Key": key,
-                "Checked": bool(val),
-                "Faculty": fac,
-                "Subject": subj,
-                "Week": week_lbl,
-                "Item ID": item_id,
-            })
-        except Exception:
-            continue
-    airtable_upsert(up_records)
-
-    # 2) Also persist into URL param as backup
-    try:
-        st.experimental_set_query_params(p=_encode_progress(payload))
-    except Exception:
-        pass
-    # 3) Best-effort localStorage (ignored if unsupported)
-    try:
-        data_json = json.dumps(payload).replace("\\", "\\\\").replace("'", "\\'")
-        streamlit_js_eval(
-            js_expressions=f"localStorage.setItem('ds_progress', '{data_json}')",
-            key=f"save-store-{uuid4()}",
-        )
-    except Exception:
-        pass
-
-# =========================
 # HEADER — logo centré (base64)
 # =========================
 logo_b64 = load_logo_base64(["streamlit/logo.png", "logo.png"])
@@ -1002,7 +923,7 @@ with left:
 
     st.divider()
 
-    # Avant rendu, charger les états de la semaine depuis Airtable (prend seulement les clés visibles)
+    # Charger l'état de la semaine depuis Airtable uniquement
     def prime_week_from_airtable(week_label: str):
         keys: List[str] = []
         for fac in FACULTIES:
@@ -1010,7 +931,6 @@ with left:
             for subj, items in week_map.items():
                 for it in items:
                     keys.append(k(fac, subj, week_label, it.get("id") or it["title"]))
-        # Ne pas écraser des états déjà dans session_state
         fetch_keys = [kk for kk in keys if kk not in st.session_state]
         fetched = airtable_fetch_checked(fetch_keys)
         for kk, vv in fetched.items():
