@@ -8,94 +8,79 @@ from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
-import requests
-import urllib.parse
+# Airtable removed
+# import requests
+# import urllib.parse
 
-# ===== Airtable (minimal, required via secrets) =====
-try:
-    AIRTABLE_BASE_ID = "appjJYScCpxoQ6F52"
-    AIRTABLE_TABLE = st.secrets["AIRTABLE_TABLE"]  # ex: "progress" ou Table ID tbl...
-    AIRTABLE_TOKEN = st.secrets["AIRTABLE_TOKEN"]  # PAT "pat..."
-except KeyError:
-    st.error("Secrets manquants: définis AIRTABLE_TABLE et AIRTABLE_TOKEN dans secrets.")
-    st.stop()
+# =========================
+# PERSISTENCE via Cookie + localStorage (JS only)
+# =========================
 
-_airtable_table_path = urllib.parse.quote(AIRTABLE_TABLE, safe="")
-AIRTABLE_API = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{_airtable_table_path}"
+def _encode_for_cookie(s: str) -> str:
+    return s.replace("%", "%25").replace(";", "%3B")
 
 
-def airtable_headers():
-    return {
-        "Authorization": f"Bearer {AIRTABLE_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
-
-def airtable_upsert(records: List[Dict]):
-    if not records:
-        return
-    payload = {
-        "performUpsert": {"fieldsToMergeOn": ["Key"]},
-        "records": [{"fields": r} for r in records],
-    }
-    try:
-        resp = requests.patch(AIRTABLE_API, headers=airtable_headers(), json=payload, timeout=15)
-        if not resp.ok:
-            st.warning(f"Airtable upsert failed: {resp.status_code} {resp.text[:200]}")
-    except Exception as e:
-        st.warning(f"Airtable upsert error: {e}")
-
-
-def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
+def _load_progress_from_browser() -> Dict[str, bool]:
+    raw = streamlit_js_eval(
+        js_expressions=(
+            "(function(){\n"
+            "  try{\n"
+            "    const m=document.cookie.match(/(?:^|; )ds_progress=([^;]+)/);\n"
+            "    const fromCookie = m? decodeURIComponent(m[1]) : null;\n"
+            "    const fromLS = localStorage.getItem('ds_progress');\n"
+            "    return fromCookie || fromLS || '';\n"
+            "  }catch(e){ return ''; }\n"
+            "})()"
+        ),
+        want_output=True,
+        key="load-progress-cookie-ls",
+    )
     out: Dict[str, bool] = {}
-    if not keys:
-        return out
-    for i in range(0, len(keys), 30):
-        chunk = keys[i:i+30]
-        esc = [k.replace('"', '\\"') for k in chunk]
-        quoted = ",".join([f'{{Key}}="{k}"' for k in esc])
-        formula = f"OR({quoted})"
-        try:
-            resp = requests.get(
-                AIRTABLE_API,
-                headers=airtable_headers(),
-                params={"fields[]": ["Key", "Checked"], "filterByFormula": formula},
-                timeout=15,
-            )
-            if resp.ok:
-                data = resp.json().get("records", [])
-                for rec in data:
-                    fields = rec.get("fields", {})
-                    kkey = fields.get("Key")
-                    if isinstance(kkey, str):
-                        out[kkey] = bool(fields.get("Checked", False))
-            else:
-                st.warning(f"Airtable fetch failed: {resp.status_code} {resp.text[:200]}")
-        except Exception as e:
-            st.warning(f"Airtable fetch error: {e}")
-            continue
+    try:
+        if raw:
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                out = {kk: bool(vv) for kk, vv in data.items() if isinstance(kk, str)}
+    except Exception:
+        pass
     return out
 
+
+def _save_progress_to_browser(payload: Dict[str, bool]):
+    data_json = json.dumps(payload)
+    # localStorage
+    streamlit_js_eval(
+        js_expressions=f"localStorage.setItem('ds_progress', '{data_json.replace('\\','\\\\').replace("'","\\'")}')",
+        key=f"save-ls-{uuid4()}",
+    )
+    # cookie 1 an
+    cookie_val = _encode_for_cookie(data_json)
+    streamlit_js_eval(
+        js_expressions=(
+            "document.cookie="
+            f"'ds_progress={cookie_val}; path=/; max-age=31536000'"
+        ),
+        key=f"save-cookie-{uuid4()}",
+    )
+
 # =========================
-# (Supprimé) Chargements locaux/URL/localStorage — Airtable only
+# FIN persistence helpers
 # =========================
-if "progress_loaded_minimal" not in st.session_state:
-    st.session_state.progress_loaded_minimal = True
+
+# (Supprimé) Airtable; on utilise cookie + localStorage
+
+# Charger une fois
+if "progress_loaded_browser" not in st.session_state:
+    browser = _load_progress_from_browser()
+    for kk, vv in browser.items():
+        st.session_state[kk] = vv
+    st.session_state.progress_loaded_browser = True
 
 
 def save_progress():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
-    up_records = []
-    for key, val in payload.items():
-        try:
-            up_records.append({
-                "Key": key,
-                "Checked": bool(val),
-            })
-        except Exception:
-            continue
-    airtable_upsert(up_records)
+    _save_progress_to_browser(payload)
 
 # =========================
 # CONFIG
@@ -913,22 +898,6 @@ with left:
             st.success("Toutes les cases de la semaine sont cochées.")
 
     st.divider()
-
-    # Charger l'état de la semaine depuis Airtable uniquement
-    def prime_week_from_airtable(week_label: str):
-        keys: List[str] = []
-        for fac in FACULTIES:
-            week_map = DATA.get(fac, {}).get(week_label, {})
-            for subj, items in week_map.items():
-                for it in items:
-                    cid = it.get("id") or it["title"]
-                    keys.append(make_key(fac, subj, week_label, cid))
-        fetch_keys = [kk for kk in keys if kk not in st.session_state]
-        fetched = airtable_fetch_checked(fetch_keys)
-        for kk, vv in fetched.items():
-            st.session_state[kk] = bool(vv)
-
-    prime_week_from_airtable(week)
 
     # Entêtes tableau
     c0, c1, c2, c3 = st.columns([2.1, 1, 1, 1])
