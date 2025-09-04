@@ -17,6 +17,23 @@ from typing import Dict, List, Optional, Tuple
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
 
+# Helpers for URL-based persistence
+
+def _encode_progress(d: Dict[str, bool]) -> str:
+    raw = json.dumps(d).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii")
+
+
+def _decode_progress(s: str) -> Dict[str, bool]:
+    try:
+        raw = base64.urlsafe_b64decode(s.encode("ascii"))
+        obj = json.loads(raw.decode("utf-8"))
+        if isinstance(obj, dict):
+            return {k: bool(v) for k, v in obj.items() if isinstance(k, str)}
+    except Exception:
+        pass
+    return {}
+
 # =========================
 # CONFIG
 # =========================
@@ -494,27 +511,61 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add_shs("24/11/2025", "Santé et travail")
 
     # -------- Santé publique (UPC) --------
-    rows_sp: List[Tuple[str, str]] = []
-    def add_sp(d: str, title: str):
-        rows_sp.append((d, title))
+    # Remplacer par la nouvelle liste catégorisée (septembre 2025)
+    rows_phys: List[Tuple[str, str]] = []
+    rows_cb: List[Tuple[str, str]] = []  # Chimie + Biochimie
+    rows_stats: List[Tuple[str, str]] = []
+    rows_sp: List[Tuple[str, str]] = []   # Santé publique
 
-    add_sp("10/09/2024", "Concepts de santé — Principaux indicateurs")
-    add_sp("17/09/2024", "Précarité et inégalités de santé")
-    add_sp("24/09/2024", "État de la santé en France")
-    add_sp("26/09/2024", "Notions de risque et facteurs de risque")
-    add_sp("01/10/2024", "Facteurs de risque comportementaux")
-    add_sp("11/10/2024", "FDR liés aux actions et produits de santé")
-    add_sp("16/10/2024", "Pilotage et contrôle du système de soins")
-    add_sp("23/10/2024", "Demande et offre de soins")
-    add_sp("30/10/2024", "Grands principes de prévention, promotion et éducation à la santé")
-    add_sp("08/11/2024", "Principe du financement des soins en France")
-    add_sp("12/11/2024", "FDR environnementaux")
-    add_sp("20/11/2024", "Dépenses de santé: structure, évolution, maîtrise")
-    add_sp("22/11/2024", "Introduction aux systèmes de santé de l'Union Européenne")
+    def add_phys(d: str, title: str): rows_phys.append((d, title))
+    def add_cb(d: str, title: str): rows_cb.append((d, title))
+    def add_stats(d: str, title: str): rows_stats.append((d, title))
+    def add_sp(d: str, title: str): rows_sp.append((d, title))
 
+    # Ajouts selon ta liste
+    # Histo-Embryo (BIO)
+    add_bio("04/09/2025", "Histo-Embryo 1")
+    add_bio("11/09/2025", "Histo-Embryo 2")
+    add_bio("17/09/2025", "Histo-Embryo 3")
+    add_bio("19/09/2025", "Histo-Embryo 4")
+    add_bio("24/09/2025", "Histo-Embryo 5")
+    add_bio("26/09/2025", "Histo-Embryo 6")
+
+    # Physique
+    add_phys("08/09/2025", "Physique 1")
+    add_phys("15/09/2025", "Physique 2")
+    add_phys("22/09/2025", "Physique 3")
+    add_phys("24/09/2025", "Physique 4")
+
+    # Chimie / Biochimie (fusion sous "Chimie – Biochimie")
+    add_cb("08/09/2025", "Chimie 1")
+    add_cb("09/09/2025", "Biochimie 1")
+    add_cb("11/09/2025", "Chimie 2")
+    add_cb("16/09/2025", "Biochimie 2")
+    add_cb("16/09/2025", "Chimie 3")
+    add_cb("18/09/2025", "Biochimie 3")
+    add_cb("19/09/2025", "Chimie 4")
+    add_cb("22/09/2025", "Chimie 5")
+    add_cb("23/09/2025", "Chimie 6")
+    add_cb("25/09/2025", "Biochimie 4")
+    add_cb("26/09/2025", "Chimie 7")
+
+    # Statistiques
+    add_stats("11/09/2025", "Maths - Biostats 1")
+    add_stats("18/09/2025", "Maths - Biostats 2")
+
+    # Santé publique
+    add_sp("09/09/2025", "Santé publique 1")
+    add_sp("16/09/2025", "Santé publique 2")
+    add_sp("23/09/2025", "Santé publique 3")
+    add_sp("25/09/2025", "Santé publique 4")
+ 
     # Tri chronologique
     rows_bio.sort(key=lambda x: parse_fr_date(x[0]))
     rows_shs.sort(key=lambda x: parse_fr_date(x[0]))
+    rows_phys.sort(key=lambda x: parse_fr_date(x[0]))
+    rows_cb.sort(key=lambda x: parse_fr_date(x[0]))
+    rows_stats.sort(key=lambda x: parse_fr_date(x[0]))
     rows_sp.sort(key=lambda x: parse_fr_date(x[0]))
 
     out: Dict[str, Dict[str, List[Dict]]] = {}
@@ -547,7 +598,49 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
             "date": d.strftime("%d/%m/%Y"),
         })
 
-    # Santé publique → sujet Santé publique
+    # Physique → sujet Physique – Biophysique
+    for dstr, title in rows_phys:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        subject = "Physique – Biophysique"
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
+
+    # Chimie/Biochimie → sujet Chimie – Biochimie
+    for dstr, title in rows_cb:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        subject = "Chimie – Biochimie"
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
+
+    # Statistiques → sujet Statistiques
+    for dstr, title in rows_stats:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        subject = "Statistiques"
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
+
+    # Santé publique → sujet Santé publique (nouvelle liste seulement)
     for dstr, title in rows_sp:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
@@ -705,6 +798,14 @@ SUBJECTS = subjects_sorted_by_frequency()
 def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
 
 if "loaded_from_localstorage" not in st.session_state:
+    # Try URL query params first (robust, no Component needed)
+    params = st.experimental_get_query_params()
+    b64 = params.get("p", [""])[0]
+    restored = _decode_progress(b64) if b64 else {}
+    for kk, vv in restored.items():
+        st.session_state[kk] = vv
+
+    # Fallback: legacy localStorage load (best-effort)
     raw = streamlit_js_eval(
         js_expressions="localStorage.getItem('ds_progress')",
         want_output=True,
@@ -719,15 +820,21 @@ if "loaded_from_localstorage" not in st.session_state:
         pass
     st.session_state.loaded_from_localstorage = True
 
-def save_to_localstorage_once():
+
+def save_progress():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
-    # Escape quotes for safe JS embedding
-    data_json = json.dumps(payload).replace("\\", "\\\\").replace("'", "\\'")
-    streamlit_js_eval(
-        js_expressions=f"localStorage.setItem('ds_progress', '{data_json}')",
-        key=f"save-store-{uuid4()}",
-    )
+    # Persist into URL query param (base64 JSON)
+    st.experimental_set_query_params(p=_encode_progress(payload))
+    # Best-effort: also write to localStorage when available
+    try:
+        data_json = json.dumps(payload).replace("\\", "\\\\").replace("'", "\\'")
+        streamlit_js_eval(
+            js_expressions=f"localStorage.setItem('ds_progress', '{data_json}')",
+            key=f"save-store-{uuid4()}",
+        )
+    except Exception:
+        pass
 
 # =========================
 # HEADER — logo centré (base64)
@@ -783,8 +890,7 @@ with left:
                 for subj, items in DATA[fac].get(week, {}).items():
                     for it in items:
                         st.session_state[k(fac, subj, week, it["id"])] = True
-            # Sauvegarder immédiatement dans localStorage
-            save_to_localstorage_once()
+            save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
 
     st.divider()
@@ -819,8 +925,7 @@ with left:
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
-                            # Sauvegarder immédiatement dans localStorage
-                            save_to_localstorage_once()
+                            save_progress()
                         st.markdown(
                             f"<span class='ok-pill'>{'OK' if new_val else 'À faire'}</span>",
                             unsafe_allow_html=True,
