@@ -8,7 +8,61 @@ from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
-# from streamlit_cookies_manager import EncryptedCookieManager  # removed
+import requests
+
+AIRTABLE_BASE_ID = "appjJYScCpxoQ6F52"
+AIRTABLE_TABLE = st.secrets.get("AIRTABLE_TABLE", "progress")
+AIRTABLE_TOKEN = st.secrets.get("AIRTABLE_TOKEN", "sk_live_5d8e2f4a9c3b4a6e8f2b1c7d4e5f6a7b")
+AIRTABLE_API = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE}"
+
+
+def airtable_headers():
+    return {
+        "Authorization": f"Bearer {AIRTABLE_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+
+def airtable_upsert(records: List[Dict]):
+    if not records:
+        return
+    payload = {
+        "performUpsert": {"fieldsToMergeOn": ["Key"]},
+        "records": [{"fields": r} for r in records],
+    }
+    try:
+        requests.patch(AIRTABLE_API, headers=airtable_headers(), json=payload, timeout=10)
+    except Exception:
+        pass
+
+
+def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
+    out: Dict[str, bool] = {}
+    if not keys:
+        return out
+    # Airtable URL length/complexity: chunk by 30 keys
+    for i in range(0, len(keys), 30):
+        chunk = keys[i:i+30]
+        # Build OR formula
+        quoted = ",".join([f'{{Key}}="{k}"' for k in chunk])
+        formula = f"OR({quoted})"
+        try:
+            resp = requests.get(
+                AIRTABLE_API,
+                headers=airtable_headers(),
+                params={"fields[]": ["Key", "Checked"], "filterByFormula": formula},
+                timeout=10,
+            )
+            if resp.ok:
+                data = resp.json().get("records", [])
+                for rec in data:
+                    fields = rec.get("fields", {})
+                    kkey = fields.get("Key")
+                    if isinstance(kkey, str):
+                        out[kkey] = bool(fields.get("Checked", False))
+        except Exception:
+            continue
+    return out
 
 # Cookie manager removed — rely on URL param + optional manual export/import
 # COOKIES = EncryptedCookieManager(prefix="ds_")
@@ -843,6 +897,28 @@ def save_progress():
             json.dump(payload, f, ensure_ascii=False)
     except Exception:
         pass
+    # 1b) Save to Airtable (upsert)
+    up_records = []
+    for key, val in payload.items():
+        try:
+            # key format: ds::FAC::SUBJ::WEEK::ITEM
+            parts = key.split("::")
+            fac = parts[1] if len(parts) > 1 else ""
+            subj = parts[2] if len(parts) > 2 else ""
+            week_lbl = parts[3] if len(parts) > 3 else ""
+            item_id = parts[4] if len(parts) > 4 else ""
+            up_records.append({
+                "Key": key,
+                "Checked": bool(val),
+                "Faculty": fac,
+                "Subject": subj,
+                "Week": week_lbl,
+                "Item ID": item_id,
+            })
+        except Exception:
+            continue
+    airtable_upsert(up_records)
+
     # 2) Also persist into URL param as backup
     try:
         st.experimental_set_query_params(p=_encode_progress(payload))
@@ -914,29 +990,24 @@ with left:
                         st.session_state[k(fac, subj, week, it["id"])] = True
             save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
-        # Export / Import / Reset
-        payload = {kk: bool(vv) for kk, vv in st.session_state.items() if isinstance(kk, str) and kk.startswith("ds::")}
-        st.download_button("Exporter état", data=json.dumps(payload, indent=2), file_name="ds_progress.json", use_container_width=True)
-        up = st.file_uploader("Importer état", type=["json"], label_visibility="collapsed")
-        if up is not None:
-            try:
-                imported = json.loads(up.read().decode("utf-8"))
-                if isinstance(imported, dict):
-                    for kk, vv in imported.items():
-                        if isinstance(kk, str) and kk.startswith("ds::"):
-                            st.session_state[kk] = bool(vv)
-                    save_progress()
-                    st.success("État importé.")
-            except Exception:
-                st.error("Fichier invalide.")
-        if st.button("Réinitialiser", use_container_width=True):
-            for kk in list(st.session_state.keys()):
-                if isinstance(kk, str) and kk.startswith("ds::"):
-                    st.session_state[kk] = False
-            save_progress()
-            st.success("Réinitialisé.")
 
     st.divider()
+
+    # Avant rendu, charger les états de la semaine depuis Airtable (prend seulement les clés visibles)
+    def prime_week_from_airtable(week_label: str):
+        keys: List[str] = []
+        for fac in FACULTIES:
+            week_map = DATA.get(fac, {}).get(week_label, {})
+            for subj, items in week_map.items():
+                for it in items:
+                    keys.append(k(fac, subj, week_label, it.get("id") or it["title"]))
+        # Ne pas écraser des états déjà dans session_state
+        fetch_keys = [kk for kk in keys if kk not in st.session_state]
+        fetched = airtable_fetch_checked(fetch_keys)
+        for kk, vv in fetched.items():
+            st.session_state[kk] = bool(vv)
+
+    prime_week_from_airtable(week)
 
     # Entêtes tableau
     c0, c1, c2, c3 = st.columns([2.1, 1, 1, 1])
