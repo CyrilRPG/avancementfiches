@@ -478,7 +478,6 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add_shs("15/09/2025", "Principes, courants et pratiques de l’éthique en santé")
     add_shs("17/09/2025", "Éthique de la recherche")
     add_shs("19/09/2025", "Santé et environnement")
-    add_shs("24/09/2025", "Présentation de l'épreuve de l'UE 7")
     add_shs("25/09/2025", "Les définitions de la santé et de la maladie")
     add_shs("26/09/2025", "La construction scientifique de la médecine aux 19e et 20e siècles")
     add_shs("03/10/2025", "Prélèvements et don d’organes")
@@ -494,9 +493,29 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add_shs("18/11/2025", "Sociologie des inégalités sociales de santé")
     add_shs("24/11/2025", "Santé et travail")
 
+    # -------- Santé publique (UPC) --------
+    rows_sp: List[Tuple[str, str]] = []
+    def add_sp(d: str, title: str):
+        rows_sp.append((d, title))
+
+    add_sp("10/09/2024", "Concepts de santé — Principaux indicateurs")
+    add_sp("17/09/2024", "Précarité et inégalités de santé")
+    add_sp("24/09/2024", "État de la santé en France")
+    add_sp("26/09/2024", "Notions de risque et facteurs de risque")
+    add_sp("01/10/2024", "Facteurs de risque comportementaux")
+    add_sp("11/10/2024", "FDR liés aux actions et produits de santé")
+    add_sp("16/10/2024", "Pilotage et contrôle du système de soins")
+    add_sp("23/10/2024", "Demande et offre de soins")
+    add_sp("30/10/2024", "Grands principes de prévention, promotion et éducation à la santé")
+    add_sp("08/11/2024", "Principe du financement des soins en France")
+    add_sp("12/11/2024", "FDR environnementaux")
+    add_sp("20/11/2024", "Dépenses de santé: structure, évolution, maîtrise")
+    add_sp("22/11/2024", "Introduction aux systèmes de santé de l'Union Européenne")
+
     # Tri chronologique
     rows_bio.sort(key=lambda x: parse_fr_date(x[0]))
     rows_shs.sort(key=lambda x: parse_fr_date(x[0]))
+    rows_sp.sort(key=lambda x: parse_fr_date(x[0]))
 
     out: Dict[str, Dict[str, List[Dict]]] = {}
 
@@ -519,6 +538,20 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
         subject = "SHS"
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
+
+    # Santé publique → sujet Santé publique
+    for dstr, title in rows_sp:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        subject = "Santé publique"
         safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
         safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
         item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
