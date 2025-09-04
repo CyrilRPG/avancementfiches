@@ -253,9 +253,9 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("02/09/2025", "Biologie 1", "8h15", "10h15")
     add("02/09/2025", "Biophysique 2", "10h30", "12h30")
 
-    add("03/09/2025", "Biophysique 2", "8h15", "10h15")
+    add("03/09/2025", "Biophysique 3", "8h15", "10h15")
 
-    add("04/09/2025", "Biophysique 3", "8h15", "10h15")
+    add("04/09/2025", "Biophysique 4", "8h15", "10h15")
     add("04/09/2025", "Statistiques 1", "10h30", "12h30")
 
     add("05/09/2025", "Chimie 1", "8h15", "10h15")
@@ -269,7 +269,7 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("10/09/2025", "Biologie 5", "8h15", "10h15")
     add("10/09/2025", "Biochimie 2", "10h30", "12h30")
 
-    add("11/09/2025", "Biophysique 4", "8h15", "10h15")
+    add("11/09/2025", "Biophysique 5", "8h15", "10h15")
     add("11/09/2025", "Statistiques 2", "10h30", "12h30")
 
     add("12/09/2025", "Chimie 2", "8h15", "10h15")
@@ -286,18 +286,18 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("19/09/2025", "Chimie 3", "8h15", "10h15")
     add("19/09/2025", "Biophysique 7", "10h30", "12h30")
 
-    add("22/09/2025", "Biophysique 5", "10h30", "12h30")
+    add("22/09/2025", "Biophysique 6", "10h30", "12h30")
 
     add("23/09/2025", "Biologie 9", "8h15", "10h15")
     add("23/09/2025", "Biochimie 4", "10h30", "12h30")
 
-    add("24/09/2025", "Biophysique 8", "8h15", "10h15")
+    add("24/09/2025", "Biophysique 9", "8h15", "10h15")
     add("24/09/2025", "Biologie 10", "10h30", "12h30")
 
     add("25/09/2025", "Chimie 4", "8h15", "10h15")
     add("25/09/2025", "Statistiques 4", "10h30", "12h30")
 
-    add("29/09/2025", "Biophysique 9", "10h30", "12h30")
+    add("29/09/2025", "Biophysique 10", "10h30", "12h30")
 
     add("30/09/2025", "Biochimie 5", "8h15", "10h15")
     add("30/09/2025", "Biologie 12", "10h30", "12h30")
@@ -306,18 +306,18 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("01/10/2025", "Statistiques 5", "8h15", "10h15")
     add("01/10/2025", "Chimie 5", "10h30", "12h30")
 
-    add("02/10/2025", "Biophysique 10", "8h15", "10h15")
+    add("02/10/2025", "Biophysique 11", "8h15", "10h15")
 
     add("03/10/2025", "Chimie 6", "8h15", "10h15")
     add("03/10/2025", "Biologie 13", "10h30", "12h30")
 
-    add("06/10/2025", "Biophysique 11", "8h15", "10h15")
+    add("06/10/2025", "Biophysique 12", "8h15", "10h15")
     add("06/10/2025", "Biologie 14", "10h30", "12h30")
 
     add("07/10/2025", "Biochimie 6", "8h15", "10h15")
-    add("07/10/2025", "Biophysique 12", "10h30", "12h30")
+    add("07/10/2025", "Biophysique 13", "10h30", "12h30")
 
-    add("08/10/2025", "Biophysique 13", "10h30", "12h30")
+    add("08/10/2025", "Biophysique 14", "10h30", "12h30")
 
     add("09/10/2025", "Statistiques 6", "8h15", "10h15")
     add("09/10/2025", "Biologie 11", "10h30", "12h30")
@@ -326,7 +326,7 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("10/10/2025", "Biologie 15", "10h30", "12h30")
 
     add("13/10/2025", "Biologie 16", "8h15", "10h15")
-    add("13/10/2025", "Biophysique 14", "10h30", "12h30")
+    add("13/10/2025", "Biophysique 15", "10h30", "12h30")
 
     add("14/10/2025", "Biochimie 7", "8h15", "10h15")
 
@@ -335,25 +335,25 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
 
     add("17/10/2025", "Chimie 8", "8h15", "10h15")
 
-    add("20/10/2025", "Biophysique 15", "8h15", "10h15")
+    add("20/10/2025", "Biophysique 16", "8h15", "10h15")
     add("20/10/2025", "Biologie 18", "10h30", "12h30")
 
     add("21/10/2025", "Biochimie 8", "8h15", "10h15")
     add("21/10/2025", "Chimie 9", "10h30", "12h30")
 
-    add("23/10/2025", "Biophysique 16", "8h15", "10h15")
+    add("23/10/2025", "Biophysique 17", "8h15", "10h15")
 
-    add("24/10/2025", "Biophysique 17", "8h15", "10h15")
+    add("24/10/2025", "Biophysique 18", "8h15", "10h15")
     add("24/10/2025", "Biologie 19", "10h30", "12h30")
 
-    add("27/10/2025", "Biophysique 18", "8h15", "10h15")
+    add("27/10/2025", "Biophysique 19", "8h15", "10h15")
     add("27/10/2025", "Biologie 20", "10h30", "12h30")
 
     add("28/10/2025", "Biologie 21", "8h15", "10h15")
     add("28/10/2025", "Chimie 10", "10h30", "12h30")
 
     # -------- Novembre 2025 --------
-    add("03/11/2025", "Biophysique 19", "8h15", "10h15")
+    add("03/11/2025", "Biophysique 20", "8h15", "10h15")
     add("03/11/2025", "Biologie 22", "10h30", "12h30")
 
     add("04/11/2025", "Biochimie 9", "8h15", "10h15")
@@ -364,12 +364,12 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("06/11/2025", "Chimie 11", "8h15", "10h15")
     add("06/11/2025", "Biologie 23", "10h30", "12h30")
 
-    add("07/11/2025", "Biophysique 20", "8h15", "10h15")
+    add("07/11/2025", "Biophysique 21", "8h15", "10h15")
     add("07/11/2025", "Biochimie 11", "10h30", "12h30")
 
     add("10/11/2025", "Chimie 12", "10h30", "12h30")
 
-    add("12/11/2025", "Biophysique 21", "10h30", "12h30")
+    add("12/11/2025", "Biophysique 22", "10h30", "12h30")
 
     add("13/11/2025", "Biochimie 12", "8h15", "10h15")
     add("13/11/2025", "Biologie 24", "10h30", "12h30")
@@ -385,7 +385,7 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("19/11/2025", "Biochimie 14", "8h15", "10h15")
 
     add("20/11/2025", "Statistiques 9", "8h15", "10h15")
-    add("20/11/2025", "Biophysique 22", "10h30", "12h30")
+    add("20/11/2025", "Biophysique 23", "10h30", "12h30")
 
     add("21/11/2025", "Chimie 14", "8h15", "10h15")
     add("21/11/2025", "Biologie 28", "10h30", "12h30")
@@ -394,7 +394,7 @@ def build_ups_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("24/11/2025", "Biologie 29", "10h30", "12h30")
 
     add("25/11/2025", "Biologie 30", "8h15", "10h15")
-    add("25/11/2025", "Biophysique 23", "10h30", "12h30")
+    add("25/11/2025", "Biophysique 24", "10h30", "12h30")
 
     add("26/11/2025", "Biologie 31", "8h15", "10h15")
     add("26/11/2025", "Biochimie 16", "10h30", "12h30")
@@ -441,49 +441,87 @@ UPS = build_ups_manual()
 # UPC — Cours de biologie cellulaire (sept → nov 2025)
 # =========================
 def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
-    # Chaque ligne : (date_dd/mm/YYYY, titre)
-    rows: List[Tuple[str, str]] = []
-    def add(d: str, title: str):
-        rows.append((d, title))
+    # Chaque ligne : (date_dd/mm/YYYY, titre) — Biologie cellulaire
+    rows_bio: List[Tuple[str, str]] = []
+    def add_bio(d: str, title: str):
+        rows_bio.append((d, title))
 
-    # -------- Septembre 2025 --------
-    add("04/09/2025", "Organisation de la cellule eucaryote")
-    add("08/09/2025", "Méthodes d'étude de la cellule 1")
-    add("15/09/2025", "Méthodes d'étude de la cellule 2")
-    add("17/09/2025", "Membrane plasmique")
-    add("22/09/2025", "Récepteurs / médiateurs")
-    add("29/09/2025", "Communication intercellulaire")
-    
-    # -------- Octobre 2025 --------
-    add("01/10/2025", "Apoptose")
-    add("07/10/2025", "Mitochondrie et péroxysomes")
-    add("14/10/2025", "Système endo-membranaire - trafic intracellulaire")
-    add("21/10/2025", "Endo- et exocytose")
-    add("28/10/2025", "Noyau")
-    
-    # -------- Novembre 2025 --------
-    add("04/11/2025", "Cytosquelette")
-    add("06/11/2025", "Jonctions - intégrines - matrice extracellulaire")
-    add("14/11/2025", "Bases cellulaires du développement")
-    add("20/11/2025", "Cycle cellulaire 1")
-    add("24/11/2025", "Cycle cellulaire 2")
+    # -------- Septembre 2025 (BIO) --------
+    add_bio("04/09/2025", "Organisation de la cellule eucaryote")
+    add_bio("08/09/2025", "Méthodes d'étude de la cellule 1")
+    add_bio("15/09/2025", "Méthodes d'étude de la cellule 2")
+    add_bio("17/09/2025", "Membrane plasmique")
+    add_bio("22/09/2025", "Récepteurs / médiateurs")
+    add_bio("29/09/2025", "Communication intercellulaire")
+
+    # -------- Octobre 2025 (BIO) --------
+    add_bio("01/10/2025", "Apoptose")
+    add_bio("07/10/2025", "Mitochondrie et péroxysomes")
+    add_bio("14/10/2025", "Système endo-membranaire - trafic intracellulaire")
+    add_bio("21/10/2025", "Endo- et exocytose")
+    add_bio("28/10/2025", "Noyau")
+
+    # -------- Novembre 2025 (BIO) --------
+    add_bio("04/11/2025", "Cytosquelette")
+    add_bio("06/11/2025", "Jonctions - intégrines - matrice extracellulaire")
+    add_bio("14/11/2025", "Bases cellulaires du développement")
+    add_bio("20/11/2025", "Cycle cellulaire 1")
+    add_bio("24/11/2025", "Cycle cellulaire 2")
+
+    # -------- SHS (UPC) --------
+    rows_shs: List[Tuple[str, str]] = []
+    def add_shs(d: str, title: str):
+        rows_shs.append((d, title))
+
+    add_shs("04/09/2025", "Histoire et définition de l’éthique")
+    add_shs("09/09/2025", "Evolution des systèmes de santé, acteurs et relations de soin")
+    add_shs("15/09/2025", "Principes, courants et pratiques de l’éthique en santé")
+    add_shs("17/09/2025", "Éthique de la recherche")
+    add_shs("19/09/2025", "Santé et environnement")
+    add_shs("24/09/2025", "Présentation de l'épreuve de l'UE 7")
+    add_shs("25/09/2025", "Les définitions de la santé et de la maladie")
+    add_shs("26/09/2025", "La construction scientifique de la médecine aux 19e et 20e siècles")
+    add_shs("03/10/2025", "Prélèvements et don d’organes")
+    add_shs("06/10/2025", "De la prescription aux usages des médicaments : enjeux éthiques et sociaux")
+    add_shs("14/10/2025", "De la recherche à la commercialisation du médicament : enjeux éthiques et sociaux")
+    add_shs("21/10/2025", "Enjeux éthiques et sociaux des maladies chroniques")
+    add_shs("23/10/2025", "Histoire de la génétique")
+    add_shs("30/10/2025", "Enjeux éthiques autour de l'interruption volontaire de grossesse")
+    add_shs("03/11/2025", "Le secret professionnel")
+    add_shs("10/11/2025", "La responsabilité professionnelle")
+    add_shs("13/11/2025", "Ethique et fin de vie")
+    add_shs("17/11/2025", "Epidémies et santé publique")
+    add_shs("18/11/2025", "Sociologie des inégalités sociales de santé")
+    add_shs("24/11/2025", "Santé et travail")
 
     # Tri chronologique
-    rows.sort(key=lambda x: parse_fr_date(x[0]))
+    rows_bio.sort(key=lambda x: parse_fr_date(x[0]))
+    rows_shs.sort(key=lambda x: parse_fr_date(x[0]))
 
     out: Dict[str, Dict[str, List[Dict]]] = {}
-    for dstr, title in rows:
+
+    # BIO → sujet Biologie cellulaire – Histo-Embryo
+    for dstr, title in rows_bio:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
-
-        # Sujet normalisé (tous les cours UPC sont en biologie cellulaire)
         subject = "Biologie cellulaire – Histo-Embryo"
-        
-        # ID stable
         safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
         safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
         item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
 
+    # SHS → sujet SHS
+    for dstr, title in rows_shs:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+        subject = "SHS"
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
         out.setdefault(wlab, {}).setdefault(subject, []).append({
             "id": item_id,
             "title": title,
@@ -634,13 +672,29 @@ SUBJECTS = subjects_sorted_by_frequency()
 def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
 
 if "loaded_from_localstorage" not in st.session_state:
-    # Initialiser les états des checkboxes
+    raw = streamlit_js_eval(
+        js_expressions="localStorage.getItem('ds_progress')",
+        want_output=True,
+        key="load-store"
+    )
+    try:
+        if raw:
+            saved = json.loads(raw)
+            for kk, vv in saved.items():
+                st.session_state[kk] = vv
+    except Exception:
+        pass
     st.session_state.loaded_from_localstorage = True
 
 def save_to_localstorage_once():
-    # Utiliser st.session_state pour la persistance (plus simple et fiable)
-    # Le localStorage sera géré automatiquement par Streamlit
-    pass
+    payload = {kk: bool(vv) for kk, vv in st.session_state.items()
+               if isinstance(kk, str) and kk.startswith("ds::")}
+    # Escape quotes for safe JS embedding
+    data_json = json.dumps(payload).replace("\\", "\\\\").replace("'", "\\'")
+    streamlit_js_eval(
+        js_expressions=f"localStorage.setItem('ds_progress', '{data_json}')",
+        key=f"save-store-{uuid4()}",
+    )
 
 # =========================
 # HEADER — logo centré (base64)
