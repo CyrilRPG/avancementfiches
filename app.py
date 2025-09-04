@@ -9,11 +9,14 @@ from typing import Dict, List, Optional, Tuple
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
 import requests
+import urllib.parse
 
 AIRTABLE_BASE_ID = "appjJYScCpxoQ6F52"
 AIRTABLE_TABLE = st.secrets.get("AIRTABLE_TABLE", "progress")
 AIRTABLE_TOKEN = st.secrets.get("AIRTABLE_TOKEN", "sk_live_5d8e2f4a9c3b4a6e8f2b1c7d4e5f6a7b")
-AIRTABLE_API = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE}"
+# URL-encode table name to support spaces/accents/dashes
+_airtable_table_path = urllib.parse.quote(AIRTABLE_TABLE, safe="")
+AIRTABLE_API = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{_airtable_table_path}"
 
 
 def airtable_headers():
@@ -31,9 +34,11 @@ def airtable_upsert(records: List[Dict]):
         "records": [{"fields": r} for r in records],
     }
     try:
-        requests.patch(AIRTABLE_API, headers=airtable_headers(), json=payload, timeout=10)
-    except Exception:
-        pass
+        resp = requests.patch(AIRTABLE_API, headers=airtable_headers(), json=payload, timeout=15)
+        if not resp.ok:
+            st.warning(f"Airtable upsert failed: {resp.status_code} {resp.text[:200]}")
+    except Exception as e:
+        st.warning(f"Airtable upsert error: {e}")
 
 
 def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
@@ -43,15 +48,16 @@ def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
     # Airtable URL length/complexity: chunk by 30 keys
     for i in range(0, len(keys), 30):
         chunk = keys[i:i+30]
-        # Build OR formula
-        quoted = ",".join([f'{{Key}}="{k}"' for k in chunk])
+        # Escape double quotes inside keys
+        esc = [k.replace('"', '\\"') for k in chunk]
+        quoted = ",".join([f'{{Key}}="{k}"' for k in esc])
         formula = f"OR({quoted})"
         try:
             resp = requests.get(
                 AIRTABLE_API,
                 headers=airtable_headers(),
                 params={"fields[]": ["Key", "Checked"], "filterByFormula": formula},
-                timeout=10,
+                timeout=15,
             )
             if resp.ok:
                 data = resp.json().get("records", [])
@@ -60,7 +66,10 @@ def airtable_fetch_checked(keys: List[str]) -> Dict[str, bool]:
                     kkey = fields.get("Key")
                     if isinstance(kkey, str):
                         out[kkey] = bool(fields.get("Checked", False))
-        except Exception:
+            else:
+                st.warning(f"Airtable fetch failed: {resp.status_code} {resp.text[:200]}")
+        except Exception as e:
+            st.warning(f"Airtable fetch error: {e}")
             continue
     return out
 
