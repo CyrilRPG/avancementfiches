@@ -25,44 +25,55 @@ def _load_progress_from_browser() -> Dict[str, bool]:
         js_expressions=(
             "(function(){\n"
             "  try{\n"
-            "    const m=document.cookie.match(/(?:^|; )ds_progress=([^;]+)/);\n"
-            "    const fromCookie = m? decodeURIComponent(m[1]) : null;\n"
-            "    const fromLS = localStorage.getItem('ds_progress');\n"
-            "    return fromCookie || fromLS || '';\n"
+            "    const getCookie = (name)=>{\n"
+            "      const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]+)'));\n"
+            "      return m? decodeURIComponent(m[1]) : null;\n"
+            "    };\n"
+            "    const c = getCookie('ds_progress');\n"
+            "    const cts = parseInt(getCookie('ds_progress_ts')||'0',10)||0;\n"
+            "    const ls = localStorage.getItem('ds_progress');\n"
+            "    const lts = parseInt(localStorage.getItem('ds_progress_ts')||'0',10)||0;\n"
+            "    const pick = (cts>=lts? c : ls) || c || ls || '';\n"
+            "    return pick;\n"
             "  }catch(e){ return ''; }\n"
             "})()"
         ),
         want_output=True,
         key="load-progress-cookie-ls",
     )
-    out: Dict[str, bool] = {}
     try:
-        if raw:
-            data = json.loads(raw)
-            if isinstance(data, dict):
-                out = {kk: bool(vv) for kk, vv in data.items() if isinstance(kk, str)}
+        return json.loads(raw) if raw else {}
     except Exception:
-        pass
-    return out
+        return {}
 
 
 def _save_progress_to_browser(payload: Dict[str, bool]):
     data_json = json.dumps(payload)
+    ts = str(int(datetime.utcnow().timestamp()))
     # localStorage
     streamlit_js_eval(
-        js_expressions=f"localStorage.setItem('ds_progress', '{data_json.replace('\\','\\\\').replace("'","\\'")}')",
+        js_expressions=(
+            "(function(){\n"
+            f"  localStorage.setItem('ds_progress', '{data_json.replace('\\','\\\\').replace("'","\\'" )}');\n"
+            f"  localStorage.setItem('ds_progress_ts', '{ts}');\n"
+            "})();"
+        ),
         key=f"save-ls-{uuid4()}",
     )
-    # cookie 1 an
-    cookie_val = _encode_for_cookie(data_json)
+    # cookie 1 an, SameSite=Lax
     streamlit_js_eval(
         js_expressions=(
-            "document.cookie="
-            f"'ds_progress={cookie_val}; path=/; max-age=31536000'"
+            "(function(){\n"
+            f"  var v=encodeURIComponent('{data_json.replace('\\','\\\\').replace("'","\\'")}');\n"
+            f"  var ts='{ts}';\n"
+            "  var attrs='; path=/; max-age=31536000; SameSite=Lax';\n"
+            "  if (location.protocol==='https:'){ attrs += '; Secure'; }\n"
+            "  document.cookie='ds_progress='+v+attrs;\n"
+            "  document.cookie='ds_progress_ts='+ts+attrs;\n"
+            "})();"
         ),
         key=f"save-cookie-{uuid4()}",
     )
-
 # =========================
 # FIN persistence helpers
 # =========================
