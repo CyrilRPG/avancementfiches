@@ -917,7 +917,7 @@ with left:
             for fac in FACULTIES:
                 for subj, items in DATA[fac].get(week, {}).items():
                     for it in items:
-                        st.session_state[k(fac, subj, week, it["id"])] = True
+                        st.session_state[make_key(fac, subj, week, it["id"])] = True
             save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
 
@@ -930,7 +930,8 @@ with left:
             week_map = DATA.get(fac, {}).get(week_label, {})
             for subj, items in week_map.items():
                 for it in items:
-                    keys.append(k(fac, subj, week_label, it.get("id") or it["title"]))
+                    cid = it.get("id") or it["title"]
+                    keys.append(make_key(fac, subj, week_label, cid))
         fetch_keys = [kk for kk in keys if kk not in st.session_state]
         fetched = airtable_fetch_checked(fetch_keys)
         for kk, vv in fetched.items():
@@ -959,7 +960,7 @@ with left:
                 else:
                     for it in items:
                         cid = it.get("id") or it["title"]
-                        ck = k(fac, subj, week, cid)
+                        ck = make_key(fac, subj, week, cid)
                         checked = st.session_state.get(ck, False)
                         cell_cls = 'cell-upc' if fac == 'UPC' else ('cell-ups' if fac == 'UPS' else 'cell-uvsq')
                         st.markdown(f'<div class="cell {cell_cls} course-block">', unsafe_allow_html=True)
