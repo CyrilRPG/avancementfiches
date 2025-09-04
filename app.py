@@ -1,11 +1,3 @@
-# app.py — Streamlit Cloud
-# Diploma Santé - Suivi de l'avancement des fiches
-# Thème sombre élégant, logo centré, tableau 3/4 + boursiers 1/4
-# Persistance des coches via localStorage
-# UVSQ (CM seulement) + UPS (CM listés manuellement, fusion des matières)
-# Tri des matières par fréquence décroissante (UVSQ + UPS), "CM inconnus" en bas
-# Numérotation CM continue par matière (pas par semaine)
-
 import base64
 import json
 import os
@@ -16,6 +8,12 @@ from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
+from streamlit_cookies_manager import EncryptedCookieManager
+
+# Cookie manager (persist across sessions reliably)
+COOKIES = EncryptedCookieManager(prefix="ds_")
+if not COOKIES.ready():
+    st.stop()
 
 # Helpers for URL-based persistence
 
@@ -798,14 +796,24 @@ SUBJECTS = subjects_sorted_by_frequency()
 def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
 
 if "loaded_from_localstorage" not in st.session_state:
-    # Try URL query params first (robust, no Component needed)
+    # Try Cookie first
+    try:
+        raw_cookie = COOKIES.get("progress")
+        if raw_cookie:
+            saved = json.loads(raw_cookie)
+            for kk, vv in saved.items():
+                st.session_state[kk] = vv
+    except Exception:
+        pass
+
+    # Try URL query params
     params = st.experimental_get_query_params()
     b64 = params.get("p", [""])[0]
     restored = _decode_progress(b64) if b64 else {}
     for kk, vv in restored.items():
         st.session_state[kk] = vv
 
-    # Fallback: legacy localStorage load (best-effort)
+    # Fallback: legacy localStorage
     raw = streamlit_js_eval(
         js_expressions="localStorage.getItem('ds_progress')",
         want_output=True,
@@ -824,9 +832,12 @@ if "loaded_from_localstorage" not in st.session_state:
 def save_progress():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
-    # Persist into URL query param (base64 JSON)
+    # Persist into cookie
+    COOKIES["progress"] = json.dumps(payload)
+    COOKIES.save()
+    # Also persist into URL param
     st.experimental_set_query_params(p=_encode_progress(payload))
-    # Best-effort: also write to localStorage when available
+    # Best-effort localStorage
     try:
         data_json = json.dumps(payload).replace("\\", "\\\\").replace("'", "\\'")
         streamlit_js_eval(
