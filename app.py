@@ -15,6 +15,9 @@ from streamlit_js_eval import streamlit_js_eval
 # if not COOKIES.ready():
 #     st.stop()
 
+# Persistent storage file (automatic, no user action needed)
+PROGRESS_FILE = "progress.json"
+
 # Helpers for URL-based persistence
 
 def _encode_progress(d: Dict[str, bool]) -> str:
@@ -796,20 +799,32 @@ SUBJECTS = subjects_sorted_by_frequency()
 def k(fac, subject, week, item_id): return make_key(fac, subject, week, item_id)
 
 if "loaded_from_localstorage" not in st.session_state:
-    # Try URL query params
+    # 1) Load from file if present
+    try:
+        if os.path.exists(PROGRESS_FILE):
+            with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+            if isinstance(saved, dict):
+                for kk, vv in saved.items():
+                    if isinstance(kk, str):
+                        st.session_state[kk] = bool(vv)
+    except Exception:
+        pass
+
+    # 2) Try URL query params
     params = st.experimental_get_query_params()
     b64 = params.get("p", [""])[0]
     restored = _decode_progress(b64) if b64 else {}
     for kk, vv in restored.items():
         st.session_state[kk] = vv
 
-    # Fallback: legacy localStorage
-    raw = streamlit_js_eval(
-        js_expressions="localStorage.getItem('ds_progress')",
-        want_output=True,
-        key="load-store"
-    )
+    # 3) Best-effort: legacy localStorage (no-op if not available)
     try:
+        raw = streamlit_js_eval(
+            js_expressions="localStorage.getItem('ds_progress')",
+            want_output=True,
+            key="load-store"
+        )
         if raw:
             saved = json.loads(raw)
             for kk, vv in saved.items():
@@ -822,9 +837,18 @@ if "loaded_from_localstorage" not in st.session_state:
 def save_progress():
     payload = {kk: bool(vv) for kk, vv in st.session_state.items()
                if isinstance(kk, str) and kk.startswith("ds::")}
-    # Persist into URL param
-    st.experimental_set_query_params(p=_encode_progress(payload))
-    # Best-effort localStorage
+    # 1) Save to file (automatic persistence)
+    try:
+        with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False)
+    except Exception:
+        pass
+    # 2) Also persist into URL param as backup
+    try:
+        st.experimental_set_query_params(p=_encode_progress(payload))
+    except Exception:
+        pass
+    # 3) Best-effort localStorage (ignored if unsupported)
     try:
         data_json = json.dumps(payload).replace("\\", "\\\\").replace("'", "\\'")
         streamlit_js_eval(
