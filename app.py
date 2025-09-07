@@ -303,6 +303,11 @@ COMMON_HINTS = {
     "Anatomie",
     "UEDS",
     "UEDL",
+    "De l'atome aux molécules",
+    "Humanités en santé",
+    "Environnement urbain et santé",
+    "Fondements philosophiques de l'éthique médicale",
+    "Droit et santé",
 }
 UNKNOWN_SUBJECT = "CM inconnus"
 
@@ -1054,13 +1059,78 @@ def build_su_manual() -> Dict[str, Dict[str, List[Dict]]]:
 SU = build_su_manual()
 
 # =========================
+# UPEC L1 — Cours semaine 08/09-14/09 (sans anglais médical)
+# =========================
+def build_upec_l1_manual() -> Dict[str, Dict[str, List[Dict]]]:
+    # Chaque ligne : (date_dd/mm/YYYY, UE, titre du cours, enseignant)
+    rows: List[Tuple[str, str, str, str]] = []
+    def add(d: str, ue: str, cours: str, enseignant: str):
+        rows.append((d, ue, cours, enseignant))
+
+    # -------- Semaine 08/09-14/09 --------
+    # De l'atome aux molécules (Marie Claire Gazeau)
+    add("08/09/2025", "De l'atome aux molécules", "Notions fondamentales de la structure d'un atome, définitions", "Marie Claire Gazeau")
+    add("08/09/2025", "De l'atome aux molécules", "Modèle quantique de l'atome et organisation électronique de l'atome", "Marie Claire Gazeau")
+    add("08/09/2025", "De l'atome aux molécules", "Présentation du tableau de classification des éléments", "Marie Claire Gazeau")
+    add("08/09/2025", "De l'atome aux molécules", "La liaison chimique (ionique, covalente) modèle de Lewis", "Marie Claire Gazeau")
+    add("08/09/2025", "De l'atome aux molécules", "Notion d'électronégativité, liaisons polarisées et molécules polaires", "Marie Claire Gazeau")
+    add("08/09/2025", "De l'atome aux molécules", "Etat de la matière", "Marie Claire Gazeau")
+    
+    # De l'atome aux molécules (Emmanuel Itti)
+    add("08/09/2025", "De l'atome aux molécules", "Particules élémentaires, notion de nucléide", "Emmanuel Itti")
+    add("08/09/2025", "De l'atome aux molécules", "Forces d'interaction", "Emmanuel Itti")
+    add("08/09/2025", "De l'atome aux molécules", "Modèle quantique, énergie de liaison", "Emmanuel Itti")
+    add("08/09/2025", "De l'atome aux molécules", "Transitions électroniques", "Emmanuel Itti")
+    add("08/09/2025", "De l'atome aux molécules", "Autres modèles de l'atome", "Emmanuel Itti")
+    
+    # Humanités en santé
+    add("08/09/2025", "Humanités en santé", "Les origines de la médecine occidentale : Hippocrate et l'hippocratisme (Ve-IVe siècle av. JC)", "Thibault Miguet")
+    
+    # Environnement urbain et santé
+    add("08/09/2025", "Environnement urbain et santé", "Introduction à la géographie de la santé", "Léa Prost-Lançon")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("08/09/2025", "Fondements philosophiques de l'éthique médicale", "Problématiques fondamentales de la relation entre philosophie, éthique et médecine", "Elodie Boublil")
+    
+    # Droit et santé (avec date précise : lundi 08/09 17h-19h)
+    add("08/09/2025", "Droit et santé", "La norme juridique et la hiérarchie des normes", "Alison Linon")
+
+    # Tri chronologique
+    rows.sort(key=lambda x: parse_fr_date(x[0]))
+
+    out: Dict[str, Dict[str, List[Dict]]] = {}
+    for dstr, ue, cours, enseignant in rows:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+
+        # Utiliser l'UE comme matière
+        subject = ue
+        title = cours
+
+        # ID stable
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPEC-L1-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+            "all_subjects": subject,  # Pour la recherche
+        })
+
+    return out
+
+UPEC_L1 = build_upec_l1_manual()
+
+# =========================
 # DATA GLOBALE
 # =========================
 DATA = {
     "UPC": UPC,
     "UPS": UPS,
     "UVSQ": UVSQ,
-    "L1 UPEC": {},
+    "L1 UPEC": UPEC_L1,
     "L2 UPEC": {},
     "USPN": {},
     "SU": SU,
