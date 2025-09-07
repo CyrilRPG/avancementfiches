@@ -157,6 +157,10 @@ st.markdown(
     .cell-upc  {{ background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.18); }}
     .cell-ups  {{ background: rgba(89,168,216,.10); border-color: rgba(89,168,216,.38); }}
     .cell-uvsq {{ background: rgba(144,238,144,.12); border-color: rgba(144,238,144,.38); }}
+    .cell-l1-upec {{ background: rgba(255,165,0,.10); border-color: rgba(255,165,0,.35); }}
+    .cell-l2-upec {{ background: rgba(255,140,0,.10); border-color: rgba(255,140,0,.35); }}
+    .cell-uspn {{ background: rgba(138,43,226,.10); border-color: rgba(138,43,226,.35); }}
+    .cell-su {{ background: rgba(220,20,60,.10); border-color: rgba(220,20,60,.35); }}
     
     /* Blocs colorés pour les cours */
     .course-block {{
@@ -170,9 +174,15 @@ st.markdown(
     
     /* Réduire l'espace entre contrôles et tableau */
     .controls-tableau {{
-      margin-bottom: 8px;
+      margin-bottom: 4px;
+    }}
+    
+    /* Espacement réduit entre filtres et tableau */
+    .stSelectbox, .stTextInput, .stDateInput {{
+      margin-bottom: 4px;
     }}
     .subject {{ color:#f3f6fb; font-weight: 700; }}
+    .subject.mini {{ font-size: 0.75rem; color: {MUTED}; font-weight: 500; }}
     .muted {{ color: {MUTED}; }}
     .mini  {{ font-size: 0.82rem; color:{MUTED}; }}
     .small {{ font-size: 0.92rem; }}
@@ -824,8 +834,12 @@ DATA = {
     "UPC": UPC,
     "UPS": UPS,
     "UVSQ": UVSQ,
+    "L1 UPEC": {},
+    "L2 UPEC": {},
+    "USPN": {},
+    "SU": {},
 }
-FACULTIES = ["UPC", "UPS", "UVSQ"]
+FACULTIES = ["UPC", "UPS", "UVSQ", "L1 UPEC", "L2 UPEC", "USPN", "SU"]
 
 # =========================
 # TRI des matières par fréquence (desc), "CM inconnus" en bas
@@ -869,15 +883,15 @@ st.markdown(
 st.write("")
 
 # =========================
-# LAYOUT 3/4 – 1/4
+# LAYOUT 4/5 – 1/5
 # =========================
-left, right = st.columns([3, 1], gap="large")
+left, right = st.columns([4, 1], gap="large")
 
 # ------ AVANCEMENT ------
 with left:
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
-    # Semaine (élargi) — sans "Tout décocher"
+    # Semaine et filtres
     all_weeks = week_ranges(date(2025, 9, 1), date(2026, 1, 4))
     if all_weeks and all_weeks[-1].endswith("04/01/2026"):
         all_weeks[-1] = "29/12/2025 - 04/01/2025"
@@ -889,16 +903,27 @@ with left:
                     return w
         return all_weeks[0]
 
-    ctop = st.columns([3.6, 2.0, 1.0])
+    # Filtres avec date précise
+    ctop = st.columns([2.5, 1.5, 1.2, 1.0, 1.0])
+    
     with ctop[0]:
         st.caption("Semaine")
         week = st.selectbox("Semaine", all_weeks,
                             index=all_weeks.index(first_week_with_data()),
                             label_visibility="collapsed")
+    
     with ctop[1]:
+        st.caption("Date précise (optionnel)")
+        specific_date = st.date_input("Date", value=None, label_visibility="collapsed")
+        if specific_date:
+            # Si une date précise est sélectionnée, on filtre par cette date
+            week = week_label_for(specific_date)
+    
+    with ctop[2]:
         st.caption("Filtrer par matière")
         query = st.text_input("Rechercher…", value="", label_visibility="collapsed").strip().lower()
-    with ctop[2]:
+    
+    with ctop[3]:
         st.caption("Actions")
         if st.button("Tout cocher", use_container_width=True):
             for fac in FACULTIES:
@@ -907,21 +932,24 @@ with left:
                         st.session_state[make_key(fac, subj, week, it["id"])] = True
             save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
+    
+    with ctop[4]:
+        st.caption("Effacer filtre")
+        if st.button("Effacer date", use_container_width=True):
+            st.rerun()
 
-    st.divider()
+    # Réduire l'espace entre filtres et tableau
+    st.markdown('<div style="margin-bottom: 8px;"></div>', unsafe_allow_html=True)
 
-    # Entêtes tableau
-    c0, c1, c2, c3 = st.columns([2.1, 1, 1, 1])
-    c0.markdown('<div class="table-head">Matière</div>', unsafe_allow_html=True)
-    for fac, c in zip(FACULTIES, [c1, c2, c3]):
+    # Entêtes tableau - plus de colonne matière, 7 colonnes pour les facultés
+    c0, c1, c2, c3, c4, c5, c6, c7 = st.columns([1, 1, 1, 1, 1, 1, 1, 1])
+    for fac, c in zip(FACULTIES, [c0, c1, c2, c3, c4, c5, c6]):
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
     # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
     for subj in [s for s in SUBJECTS if query in s.lower()]:
-        r0, r1, r2, r3 = st.columns([2.1, 1, 1, 1], gap="large")
-        with r0:
-            st.markdown(f'<div class="rowline subject">{subj}</div>', unsafe_allow_html=True)
-
+        r0, r1, r2, r3, r4, r5, r6, r7 = st.columns([1, 1, 1, 1, 1, 1, 1, 1], gap="large")
+        
         def render_cell(col, fac):
             items = DATA.get(fac, {}).get(week, {}).get(subj, [])
             with col:
@@ -933,10 +961,26 @@ with left:
                         cid = it.get("id") or it["title"]
                         ck = make_key(fac, subj, week, cid)
                         checked = st.session_state.get(ck, False)
-                        cell_cls = 'cell-upc' if fac == 'UPC' else ('cell-ups' if fac == 'UPS' else 'cell-uvsq')
+                        if fac == 'UPC':
+                            cell_cls = 'cell-upc'
+                        elif fac == 'UPS':
+                            cell_cls = 'cell-ups'
+                        elif fac == 'UVSQ':
+                            cell_cls = 'cell-uvsq'
+                        elif fac == 'L1 UPEC':
+                            cell_cls = 'cell-l1-upec'
+                        elif fac == 'L2 UPEC':
+                            cell_cls = 'cell-l2-upec'
+                        elif fac == 'USPN':
+                            cell_cls = 'cell-uspn'
+                        elif fac == 'SU':
+                            cell_cls = 'cell-su'
+                        else:
+                            cell_cls = 'cell-upc'
                         st.markdown(f'<div class="cell {cell_cls} course-block">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
+                        st.markdown(f'<span class="mini subject">{subj}</span>', unsafe_allow_html=True)
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
@@ -948,9 +992,13 @@ with left:
                         st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-        render_cell(r1, "UPC")
-        render_cell(r2, "UPS")
-        render_cell(r3, "UVSQ")
+        render_cell(r0, "UPC")
+        render_cell(r1, "UPS")
+        render_cell(r2, "UVSQ")
+        render_cell(r3, "L1 UPEC")
+        render_cell(r4, "L2 UPEC")
+        render_cell(r5, "USPN")
+        render_cell(r6, "SU")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
