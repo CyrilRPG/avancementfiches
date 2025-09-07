@@ -1129,6 +1129,267 @@ def build_upec_l1_manual() -> Dict[str, Dict[str, List[Dict]]]:
 
 UPEC_L1 = build_upec_l1_manual()
 
+def build_upec_l2_manual() -> Dict[str, Dict[str, List[Dict]]]:
+    # Données brutes : (date_dd/mm/YYYY, matière)
+    raw_courses: List[Tuple[str, str]] = []
+    
+    def add_course(date_str: str, subject: str):
+        raw_courses.append((date_str, subject))
+    
+    # -------- Cours UPEC L2 --------
+    # 08/09
+    add_course("08/09/2025", "Biostatistiques")
+    add_course("08/09/2025", "Biochimie")
+    
+    # 09/09
+    add_course("09/09/2025", "Biologie moléculaire")
+    add_course("09/09/2025", "Bases en biophysique")
+    add_course("09/09/2025", "Biochimie")
+    
+    # 10/09
+    add_course("10/09/2025", "Neurosciences")
+    add_course("10/09/2025", "Santé publique")
+    
+    # 12/09
+    add_course("12/09/2025", "Immunologie")
+    add_course("12/09/2025", "Communication cellulaire et signalisation")
+    
+    # 15/09
+    add_course("15/09/2025", "Biostatistiques")
+    add_course("15/09/2025", "Biochimie")
+    
+    # 16/09
+    add_course("16/09/2025", "Biologie moléculaire")
+    add_course("16/09/2025", "Bases en biophysique")
+    add_course("16/09/2025", "Biochimie")
+    
+    # 17/09
+    add_course("17/09/2025", "Santé publique")
+    add_course("17/09/2025", "Neurosciences")
+    
+    # 18/09
+    add_course("18/09/2025", "Présentation UE du S4 Amphis 1 et 2")
+    add_course("18/09/2025", "Neurosciences")
+    
+    # 19/09
+    add_course("19/09/2025", "Immunologie")
+    add_course("19/09/2025", "Communication cellulaire et signalisation")
+    
+    # 22/09
+    add_course("22/09/2025", "Biostatistiques")
+    add_course("22/09/2025", "Biochimie")
+    
+    # 23/09
+    add_course("23/09/2025", "Biologie moléculaire")
+    add_course("23/09/2025", "Bases en biophysique")
+    add_course("23/09/2025", "Biochimie")
+    
+    # 24/09
+    add_course("24/09/2025", "Neurosciences")
+    add_course("24/09/2025", "Santé publique")
+    
+    # 26/09
+    add_course("26/09/2025", "Immunologie")
+    add_course("26/09/2025", "Communication cellulaire et signalisation")
+    
+    # 29/09
+    add_course("29/09/2025", "Biostatistiques")
+    add_course("29/09/2025", "Biochimie")
+    
+    # 30/09
+    add_course("30/09/2025", "Biologie moléculaire")
+    add_course("30/09/2025", "Bases en biophysique")
+    add_course("30/09/2025", "Biochimie")
+    
+    # 01/10
+    add_course("01/10/2025", "Neurosciences")
+    add_course("01/10/2025", "Santé publique")
+    
+    # 03/10
+    add_course("03/10/2025", "Immunologie")
+    add_course("03/10/2025", "Communication cellulaire et signalisation")
+    
+    # 06/10
+    add_course("06/10/2025", "Biostatistiques")
+    add_course("06/10/2025", "Biochimie")
+    
+    # 07/10
+    add_course("07/10/2025", "Biologie moléculaire")
+    add_course("07/10/2025", "Bases en biophysique")
+    add_course("07/10/2025", "Biochimie")
+    
+    # 08/10
+    add_course("08/10/2025", "Neurosciences")
+    add_course("08/10/2025", "Santé publique")
+    
+    # 10/10
+    add_course("10/10/2025", "Immunologie")
+    add_course("10/10/2025", "Communication cellulaire et signalisation")
+    
+    # 13/10
+    add_course("13/10/2025", "Biostatistiques")
+    add_course("13/10/2025", "SHS")
+    
+    # 14/10
+    add_course("14/10/2025", "Biologie moléculaire")
+    add_course("14/10/2025", "Bases en biophysique")
+    add_course("14/10/2025", "SHS")
+    
+    # 15/10
+    add_course("15/10/2025", "Neurosciences")
+    add_course("15/10/2025", "Santé publique")
+    
+    # 17/10
+    add_course("17/10/2025", "Immunologie")
+    add_course("17/10/2025", "Communication cellulaire et signalisation")
+    
+    # 20/10
+    add_course("20/10/2025", "Biostatistiques")
+    add_course("20/10/2025", "SHS")
+    
+    # 21/10
+    add_course("21/10/2025", "Biologie moléculaire")
+    add_course("21/10/2025", "Bases en biophysique")
+    add_course("21/10/2025", "SHS")
+    
+    # 22/10
+    add_course("22/10/2025", "Neurosciences")
+    add_course("22/10/2025", "Santé publique")
+    
+    # 24/10
+    add_course("24/10/2025", "Communication cellulaire et signalisation")
+    add_course("24/10/2025", "Immunologie")
+    
+    # 27/10
+    add_course("27/10/2025", "Biostatistiques")
+    add_course("27/10/2025", "SHS")
+    
+    # 28/10
+    add_course("28/10/2025", "Biologie moléculaire")
+    add_course("28/10/2025", "Bases en biophysique")
+    add_course("28/10/2025", "SHS")
+    
+    # 29/10
+    add_course("29/10/2025", "Neurosciences")
+    add_course("29/10/2025", "Santé publique")
+    
+    # 31/10
+    add_course("31/10/2025", "Immunologie")
+    add_course("31/10/2025", "Communication cellulaire et signalisation")
+    
+    # 03/11
+    add_course("03/11/2025", "Biostatistiques")
+    add_course("03/11/2025", "SHS")
+    
+    # 04/11
+    add_course("04/11/2025", "Biologie moléculaire")
+    add_course("04/11/2025", "Bases en biophysique")
+    add_course("04/11/2025", "SHS")
+    
+    # 05/11
+    add_course("05/11/2025", "Neurosciences")
+    add_course("05/11/2025", "Santé publique")
+    
+    # 07/11
+    add_course("07/11/2025", "Immunologie")
+    add_course("07/11/2025", "Communication cellulaire et signalisation")
+    
+    # 10/11
+    add_course("10/11/2025", "SHS")
+    
+    # 12/11
+    add_course("12/11/2025", "Neurosciences")
+    add_course("12/11/2025", "Santé publique")
+    
+    # 14/11
+    add_course("14/11/2025", "Immunologie")
+    add_course("14/11/2025", "Communication cellulaire et signalisation")
+    
+    # 17/11
+    add_course("17/11/2025", "Biostatistiques")
+    add_course("17/11/2025", "SHS")
+    
+    # 18/11
+    add_course("18/11/2025", "Biologie moléculaire")
+    add_course("18/11/2025", "Bases en biophysique")
+    add_course("18/11/2025", "SHS")
+    
+    # 19/11
+    add_course("19/11/2025", "Neurosciences")
+    add_course("19/11/2025", "Santé publique")
+    
+    # 21/11
+    add_course("21/11/2025", "Immunologie")
+    add_course("21/11/2025", "Communication cellulaire et signalisation")
+    
+    # 24/11
+    add_course("24/11/2025", "SHS")
+    
+    # 25/11
+    add_course("25/11/2025", "Biologie moléculaire")
+    add_course("25/11/2025", "Bases en biophysique")
+    add_course("25/11/2025", "SHS")
+    
+    # 26/11
+    add_course("26/11/2025", "Neurosciences")
+    add_course("26/11/2025", "Santé publique")
+    
+    # 28/11
+    add_course("28/11/2025", "Immunologie")
+    add_course("28/11/2025", "Communication cellulaire et signalisation")
+    
+    # 01/12
+    add_course("01/12/2025", "Bases en biophysique")
+    
+    # 02/12
+    add_course("02/12/2025", "Biologie moléculaire")
+    add_course("02/12/2025", "Santé publique")
+    add_course("02/12/2025", "SHS")
+    
+    # 03/12
+    add_course("03/12/2025", "Neurosciences")
+    add_course("03/12/2025", "Santé publique")
+    
+    # 05/12
+    add_course("05/12/2025", "Neurosciences")
+    
+    # 09/12
+    add_course("09/12/2025", "SHS Questions-réponses")
+    
+    # Tri chronologique
+    raw_courses.sort(key=lambda x: parse_fr_date(x[0]))
+    
+    # Compter les occurrences de chaque matière pour la numérotation des CM
+    subject_counts: Dict[str, int] = {}
+    
+    out: Dict[str, Dict[str, List[Dict]]] = {}
+    for date_str, subject in raw_courses:
+        d = parse_fr_date(date_str)
+        wlab = week_label_for(d)
+        
+        # Compter les occurrences de cette matière
+        subject_counts[subject] = subject_counts.get(subject, 0) + 1
+        cm_number = subject_counts[subject]
+        
+        # Créer le titre avec numérotation automatique
+        title = f"{subject} CM {cm_number}"
+        
+        # ID stable
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UPEC-L2-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+        
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": "-",  # Date générique comme pour L1
+            "all_subjects": subject,  # Pour la recherche
+        })
+    
+    return out
+
+UPEC_L2 = build_upec_l2_manual()
+
 # =========================
 # DATA GLOBALE
 # =========================
@@ -1137,7 +1398,7 @@ DATA = {
     "UPS": UPS,
     "UVSQ": UVSQ,
     "L1 UPEC": UPEC_L1,
-    "L2 UPEC": {},
+    "L2 UPEC": UPEC_L2,
     "USPN": {},
     "SU": SU,
 }
@@ -1209,8 +1470,8 @@ with left:
                     return w
         return all_weeks[0]
 
-    # Filtres avec date précise
-    ctop = st.columns([2.5, 1.5, 1.2, 1.0])
+    # Filtres avec sélecteur de faculté
+    ctop = st.columns([1.5, 1.5, 1.2, 1.0, 1.0])
     
     with ctop[0]:
         st.caption("Semaine")
@@ -1219,17 +1480,23 @@ with left:
                             label_visibility="collapsed")
     
     with ctop[1]:
+        st.caption("Faculté")
+        selected_faculty = st.selectbox("Faculté", ["Toutes"] + FACULTIES,
+                                       index=0, label_visibility="collapsed")
+    
+    with ctop[2]:
         st.caption("Date précise (optionnel)")
         specific_date = st.date_input("Date", value=None, label_visibility="collapsed")
     
-    with ctop[2]:
+    with ctop[3]:
         st.caption("Filtrer par matière")
         query = st.text_input("Rechercher…", value="", label_visibility="collapsed").strip().lower()
     
-    with ctop[3]:
+    with ctop[4]:
         st.caption("Actions")
         if st.button("Tout cocher", use_container_width=True):
-            for fac in FACULTIES:
+            faculties_to_check = [selected_faculty] if selected_faculty != "Toutes" else FACULTIES
+            for fac in faculties_to_check:
                 for subj, items in DATA[fac].get(week, {}).items():
                     for it in items:
                         st.session_state[make_key(fac, subj, week, it["id"])] = True
@@ -1239,13 +1506,24 @@ with left:
     # Espacement entre filtres et tableau - agrandir le rectangle orange
     st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
 
-    # Entêtes tableau - 7 colonnes pour les facultés avec largeurs équilibrées
-    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.3, 1.3, 1.3, 1.2, 1.2, 1.2, 1.2])
-    for fac, c in zip(FACULTIES, [c0, c1, c2, c3, c4, c5, c6]):
-        c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
-
-    # Organiser par faculté pour éviter les trous - affichage continu par colonne
-    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.3, 1.3, 1.3, 1.2, 1.2, 1.2, 1.2], gap="large")
+    # Déterminer quelles facultés afficher
+    if selected_faculty == "Toutes":
+        faculties_to_display = FACULTIES
+        # Entêtes tableau - 7 colonnes pour les facultés avec largeurs équilibrées
+        c0, c1, c2, c3, c4, c5, c6 = st.columns([1.3, 1.3, 1.3, 1.2, 1.2, 1.2, 1.2])
+        for fac, c in zip(FACULTIES, [c0, c1, c2, c3, c4, c5, c6]):
+            c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
+        
+        # Organiser par faculté pour éviter les trous - affichage continu par colonne
+        c0, c1, c2, c3, c4, c5, c6 = st.columns([1.3, 1.3, 1.3, 1.2, 1.2, 1.2, 1.2], gap="large")
+        columns = [c0, c1, c2, c3, c4, c5, c6]
+    else:
+        faculties_to_display = [selected_faculty]
+        # Une seule colonne en grand
+        c0, = st.columns([1])
+        c0.markdown(f'<div class="table-head fac-head">{selected_faculty}</div>', unsafe_allow_html=True)
+        c0, = st.columns([1], gap="large")
+        columns = [c0]
     
     def render_faculty_column(col, fac):
         """Affiche tous les cours d'une faculté de manière continue"""
@@ -1325,14 +1603,9 @@ with left:
             
             st.markdown('</div>', unsafe_allow_html=True)
     
-    # Afficher chaque faculté dans sa colonne
-    render_faculty_column(c0, "UPC")
-    render_faculty_column(c1, "UPS")
-    render_faculty_column(c2, "UVSQ")
-    render_faculty_column(c3, "L1 UPEC")
-    render_faculty_column(c4, "L2 UPEC")
-    render_faculty_column(c5, "USPN")
-    render_faculty_column(c6, "SU")
+    # Afficher les facultés sélectionnées
+    for i, fac in enumerate(faculties_to_display):
+        render_faculty_column(columns[i], fac)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
