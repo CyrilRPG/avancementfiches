@@ -289,6 +289,8 @@ def parse_fr_date(dstr: str) -> date:
 # =========================
 COMMON_HINTS = {
     "Biologie cellulaire",
+    "Histologie",
+    "Embryologie",
     "Chimie",
     "Biochimie", 
     "Physique",
@@ -814,15 +816,15 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
     add_day("10/11/2025", [("biohe", None), ("phys", None)])
     add_day("11/11/2025", [("unknown", "10 heures")])
 
-    # Regroupement par catégories communes
-    def kind_to_subject(k: str) -> str:
+    # Regroupement par catégories communes - pour UVSQ on crée plusieurs entrées
+    def kind_to_subjects(k: str) -> List[str]:
         if k == "biohe":
-            return "Biologie cellulaire"
+            return ["Biologie cellulaire", "Histologie", "Embryologie"]
         if k == "chimiebioch":
-            return "Chimie"
+            return ["Chimie", "Biochimie"]
         if k == "phys":
-            return "Physique"
-        return UNKNOWN_SUBJECT
+            return ["Physique", "Biophysique"]
+        return [UNKNOWN_SUBJECT]
 
     # Pour UVSQ: numérotation démarre à 1 pour chaque matière (indépendante de UPS)
     out: Dict[str, Dict[str, List[Dict]]] = {}
@@ -833,30 +835,43 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
         for kind, detail in entries:
-            subject = kind_to_subject(kind)
+            subjects = kind_to_subjects(kind)
+            
+            for subject in subjects:
+                seq.setdefault(subject, 0)
+                seq[subject] += 1
+                num = seq[subject]
 
-            seq.setdefault(subject, 0)
-            seq[subject] += 1
-            num = seq[subject]
+                if subject == UNKNOWN_SUBJECT:
+                    title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
+                else:
+                    # Affichage UVSQ personnalisé selon la matière
+                    if subject == "Biologie cellulaire":
+                        title = f"Biocell - Histo - Embryo {num}"
+                    elif subject == "Histologie":
+                        title = f"Biocell - Histo - Embryo {num}"
+                    elif subject == "Embryologie":
+                        title = f"Biocell - Histo - Embryo {num}"
+                    elif subject == "Chimie":
+                        title = f"Chimie - Biochimie {num}"
+                    elif subject == "Biochimie":
+                        title = f"Chimie - Biochimie {num}"
+                    elif subject == "Physique":
+                        title = f"Physique - Biophysique {num}"
+                    elif subject == "Biophysique":
+                        title = f"Physique - Biophysique {num}"
+                    else:
+                        title = f"{subject} {num}"
 
-            if subject == UNKNOWN_SUBJECT:
-                title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
-            else:
-                # Affichage UVSQ personnalisé: bio/histo/embryo => "Biocell - Histo - Embryo"
-                short = subject_short_name(subject)
-                if subject == "Biologie cellulaire – Histo-Embryo":
-                    short = "Biocell - Histo - Embryo"
-                title = f"{short} {num}"
+                safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+                safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+                item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
 
-            safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
-            safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
-            item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
-
-            out.setdefault(wlab, {}).setdefault(subject, []).append({
-                "id": item_id,
-                "title": title,
-                "date": d.strftime("%d/%m/%Y"),
-            })
+                out.setdefault(wlab, {}).setdefault(subject, []).append({
+                    "id": item_id,
+                    "title": title,
+                    "date": d.strftime("%d/%m/%Y"),
+                })
 
     return out
 
@@ -910,12 +925,11 @@ st.markdown(
     <div class="ds-header">
       {logo_html}
       <div class="ds-title title-grad">Diploma Santé</div>
-      <div class="ds-sub">Suivi de l’avancement des fiches</div>
+      <div class="ds-sub">Suivi de l'avancement des fiches</div>
     </div>
     """,
     unsafe_allow_html=True
 )
-st.write("")
 
 # =========================
 # LAYOUT 4/5 – 1/5
@@ -924,6 +938,8 @@ left, right = st.columns([4, 1], gap="large")
 
 # ------ AVANCEMENT ------
 with left:
+    # Ajouter un espace entre header et filtres
+    st.markdown('<div style="margin-top: 16px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
     # Semaine et filtres
@@ -939,7 +955,7 @@ with left:
         return all_weeks[0]
 
     # Filtres avec date précise
-    ctop = st.columns([2.5, 1.5, 1.2, 1.0, 1.0])
+    ctop = st.columns([2.5, 1.5, 1.2, 1.0])
     
     with ctop[0]:
         st.caption("Semaine")
@@ -950,9 +966,6 @@ with left:
     with ctop[1]:
         st.caption("Date précise (optionnel)")
         specific_date = st.date_input("Date", value=None, label_visibility="collapsed")
-        if specific_date:
-            # Si une date précise est sélectionnée, on filtre par cette date
-            week = week_label_for(specific_date)
     
     with ctop[2]:
         st.caption("Filtrer par matière")
@@ -967,11 +980,6 @@ with left:
                         st.session_state[make_key(fac, subj, week, it["id"])] = True
             save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
-    
-    with ctop[4]:
-        st.caption("Effacer filtre")
-        if st.button("Effacer date", use_container_width=True):
-            st.rerun()
 
     # Réduire l'espace entre filtres et tableau
     st.markdown('<div style="margin-bottom: 8px;"></div>', unsafe_allow_html=True)
@@ -986,7 +994,14 @@ with left:
         r0, r1, r2, r3, r4, r5, r6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
         
         def render_cell(col, fac):
-            items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+            # Si une date précise est sélectionnée, filtrer par cette date
+            if specific_date:
+                target_date = specific_date.strftime("%d/%m/%Y")
+                all_items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+                items = [it for it in all_items if it["date"] == target_date]
+            else:
+                items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+            
             with col:
                 st.markdown('<div class="rowline">', unsafe_allow_html=True)
                 if not items:
