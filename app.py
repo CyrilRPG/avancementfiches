@@ -816,15 +816,15 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
     add_day("10/11/2025", [("biohe", None), ("phys", None)])
     add_day("11/11/2025", [("unknown", "10 heures")])
 
-    # Regroupement par catégories communes - pour UVSQ on crée plusieurs entrées
-    def kind_to_subjects(k: str) -> List[str]:
+    # Regroupement par catégories communes - pour UVSQ on garde une entrée mais avec toutes les matières
+    def kind_to_subject_and_all_subjects(k: str) -> Tuple[str, List[str]]:
         if k == "biohe":
-            return ["Biologie cellulaire", "Histologie", "Embryologie"]
+            return "Biologie cellulaire", ["Biologie cellulaire", "Histologie", "Embryologie"]
         if k == "chimiebioch":
-            return ["Chimie", "Biochimie"]
+            return "Chimie", ["Chimie", "Biochimie"]
         if k == "phys":
-            return ["Physique", "Biophysique"]
-        return [UNKNOWN_SUBJECT]
+            return "Physique", ["Physique", "Biophysique"]
+        return UNKNOWN_SUBJECT, [UNKNOWN_SUBJECT]
 
     # Pour UVSQ: numérotation démarre à 1 pour chaque matière (indépendante de UPS)
     out: Dict[str, Dict[str, List[Dict]]] = {}
@@ -835,43 +835,40 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
         for kind, detail in entries:
-            subjects = kind_to_subjects(kind)
+            subject, all_subjects = kind_to_subject_and_all_subjects(kind)
             
-            for subject in subjects:
-                seq.setdefault(subject, 0)
-                seq[subject] += 1
-                num = seq[subject]
+            seq.setdefault(subject, 0)
+            seq[subject] += 1
+            num = seq[subject]
 
-                if subject == UNKNOWN_SUBJECT:
-                    title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
+            if subject == UNKNOWN_SUBJECT:
+                title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
+                all_subjects_str = "CM inconnus"
+            else:
+                # Affichage UVSQ personnalisé selon la matière
+                if subject == "Biologie cellulaire":
+                    title = f"Biocell - Histo - Embryo {num}"
+                    all_subjects_str = "Biologie cellulaire, Histologie, Embryologie"
+                elif subject == "Chimie":
+                    title = f"Chimie - Biochimie {num}"
+                    all_subjects_str = "Chimie, Biochimie"
+                elif subject == "Physique":
+                    title = f"Physique - Biophysique {num}"
+                    all_subjects_str = "Physique, Biophysique"
                 else:
-                    # Affichage UVSQ personnalisé selon la matière
-                    if subject == "Biologie cellulaire":
-                        title = f"Biocell - Histo - Embryo {num}"
-                    elif subject == "Histologie":
-                        title = f"Biocell - Histo - Embryo {num}"
-                    elif subject == "Embryologie":
-                        title = f"Biocell - Histo - Embryo {num}"
-                    elif subject == "Chimie":
-                        title = f"Chimie - Biochimie {num}"
-                    elif subject == "Biochimie":
-                        title = f"Chimie - Biochimie {num}"
-                    elif subject == "Physique":
-                        title = f"Physique - Biophysique {num}"
-                    elif subject == "Biophysique":
-                        title = f"Physique - Biophysique {num}"
-                    else:
-                        title = f"{subject} {num}"
+                    title = f"{subject} {num}"
+                    all_subjects_str = subject
 
-                safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
-                safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
-                item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+            safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+            safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+            item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
 
-                out.setdefault(wlab, {}).setdefault(subject, []).append({
-                    "id": item_id,
-                    "title": title,
-                    "date": d.strftime("%d/%m/%Y"),
-                })
+            out.setdefault(wlab, {}).setdefault(subject, []).append({
+                "id": item_id,
+                "title": title,
+                "date": d.strftime("%d/%m/%Y"),
+                "all_subjects": all_subjects_str,  # Stocker toutes les matières pour la recherche
+            })
 
     return out
 
@@ -981,8 +978,8 @@ with left:
             save_progress()
             st.success("Toutes les cases de la semaine sont cochées.")
 
-    # Réduire l'espace entre filtres et tableau
-    st.markdown('<div style="margin-bottom: 8px;"></div>', unsafe_allow_html=True)
+    # Espacement entre filtres et tableau - agrandir le rectangle orange
+    st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
 
     # Entêtes tableau - 7 colonnes pour les facultés avec largeurs optimisées
     c0, c1, c2, c3, c4, c5, c6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1])
@@ -990,7 +987,41 @@ with left:
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
     # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
-    for subj in [s for s in SUBJECTS if query in s.lower()]:
+    # Filtrer les matières en tenant compte des matières étendues ET vérifier qu'elles ont des cours
+    filtered_subjects = []
+    for subj in SUBJECTS:
+        has_courses_after_filter = False
+        
+        # Vérifier si cette matière a des cours après filtrage
+        for fac in FACULTIES:
+            # Récupérer les items de base
+            if specific_date:
+                target_date = specific_date.strftime("%d/%m/%Y")
+                all_items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+                items = [it for it in all_items if it["date"] == target_date]
+            else:
+                items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+            
+            # Appliquer le filtre de matière si nécessaire
+            if query:
+                filtered_items = []
+                for it in items:
+                    # Vérifier la matière principale
+                    if query in subj.lower():
+                        filtered_items.append(it)
+                    # Vérifier les matières étendues si disponibles
+                    elif it.get("all_subjects") and query in it["all_subjects"].lower():
+                        filtered_items.append(it)
+                items = filtered_items
+            
+            if items:
+                has_courses_after_filter = True
+                break
+        
+        if has_courses_after_filter:
+            filtered_subjects.append(subj)
+    
+    for subj in filtered_subjects:
         r0, r1, r2, r3, r4, r5, r6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
         
         def render_cell(col, fac):
@@ -1001,6 +1032,18 @@ with left:
                 items = [it for it in all_items if it["date"] == target_date]
             else:
                 items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+            
+            # Filtrer par matière si nécessaire (pour les matières étendues)
+            if query:
+                filtered_items = []
+                for it in items:
+                    # Vérifier la matière principale
+                    if query in subj.lower():
+                        filtered_items.append(it)
+                    # Vérifier les matières étendues si disponibles
+                    elif it.get("all_subjects") and query in it["all_subjects"].lower():
+                        filtered_items.append(it)
+                items = filtered_items
             
             with col:
                 st.markdown('<div class="rowline">', unsafe_allow_html=True)
@@ -1030,7 +1073,9 @@ with left:
                         st.markdown(f'<div class="cell {cell_cls} course-block">', unsafe_allow_html=True)
                         st.markdown(f"**{it['title']}**")
                         st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
-                        st.markdown(f'<span class="mini subject">{subj}</span>', unsafe_allow_html=True)
+                        # Afficher toutes les matières si disponibles, sinon la matière principale
+                        subjects_to_show = it.get("all_subjects", subj)
+                        st.markdown(f'<span class="mini subject">{subjects_to_show}</span>', unsafe_allow_html=True)
                         new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
                         if new_val != checked:
                             st.session_state[ck] = new_val
