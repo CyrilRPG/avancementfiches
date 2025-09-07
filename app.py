@@ -288,30 +288,65 @@ def parse_fr_date(dstr: str) -> date:
 # CLASSIFICATION MATIÈRES
 # =========================
 COMMON_HINTS = {
-    "Biologie cellulaire – Histo-Embryo",
-    "Chimie – Biochimie",
-    "Physique – Biophysique",
+    "Biologie cellulaire",
+    "Chimie",
+    "Biochimie", 
+    "Physique",
+    "Biophysique",
+    "Statistiques",
+    "SHS",
+    "Santé publique",
 }
 UNKNOWN_SUBJECT = "CM inconnus"
 
 def classify_subject(raw_title: str) -> str:
+    """Classification basée sur le nom exact du cours"""
     t = raw_title.upper()
-    if re.search(r'BIO\s*CELL|HISTO|EMBRYO', t): return "Biologie cellulaire – Histo-Embryo"
-    if re.search(r'CHIMIE|BIOCHIMIE', t):         return "Chimie – Biochimie"
-    if re.search(r'PHYSIQUE|BIOPHYSIQUE', t):     return "Physique – Biophysique"
-    if re.search(r'STAT', t):                     return "Statistiques"
+    
+    # Classification précise basée sur les noms réels des cours
+    if re.search(r'^BIOCHIMIE\s+\d+', t): return "Biochimie"
+    if re.search(r'^CHIMIE\s+\d+', t): return "Chimie"
+    if re.search(r'^BIOLOGIE\s+\d+', t): return "Biologie cellulaire"
+    if re.search(r'^BIOPHYSIQUE\s+\d+', t): return "Biophysique"
+    if re.search(r'^STATISTIQUES\s+\d+', t): return "Statistiques"
+    
+    # Pour les cours UPC avec noms descriptifs
+    if re.search(r'CELLULE|MEMBRANE|MITOCHONDRIE|NOYAU|CYTOSQUELETTE|CYCLE\s+CELLULAIRE|APOPTOSE|COMMUNICATION\s+INTERCELLULAIRE|TRAFIC\s+INTRACELLULAIRE|ENDO.*EXOCYTOSE|JONCTIONS|INTEGRINES|MATRICE\s+EXTRACELLULAIRE|DEVELOPPEMENT', t):
+        return "Biologie cellulaire"
+    
+    if re.search(r'ETHIQUE|SANTE|ENVIRONNEMENT|MEDECINE|PRESCRIPTION|MEDICAMENT|RECHERCHE|COMMERCIALISATION|MALADIES\s+CHRONIQUES|GENETIQUE|IVG|SECRET\s+PROFESSIONNEL|RESPONSABILITE\s+PROFESSIONNELLE|FIN\s+DE\s+VIE|EPIDEMIES|SANTE\s+PUBLIQUE|INEQUALITES\s+SOCIALES|TRAVAIL', t):
+        return "SHS"
+    
+    if re.search(r'^PHYSIQUE\s+\d+', t): return "Physique"
+    if re.search(r'^HISTO.*EMBRYO\s+\d+', t): return "Biologie cellulaire"
+    if re.search(r'^MATHS.*BIOSTATS\s+\d+', t): return "Statistiques"
+    if re.search(r'^SANTE\s+PUBLIQUE\s+\d+', t): return "Santé publique"
+    
+    # Fallback pour les noms composés UVSQ
+    if re.search(r'BIO.*CELL.*HISTO.*EMBRYO', t): return "Biologie cellulaire"
+    if re.search(r'CHIMIE.*BIOCHIMIE', t): return "Chimie"
+    if re.search(r'PHYSIQUE.*BIOPHYSIQUE', t): return "Physique"
+    
     return UNKNOWN_SUBJECT
 
 def normalize_from_ups(label: str) -> str:
+    """Normalisation pour UPS - utilise le premier mot du label"""
     t = label.strip().lower()
-    if t.startswith("biologie"):
-        return "Biologie cellulaire – Histo-Embryo"
-    if t.startswith("biophysique"):
-        return "Physique – Biophysique"
-    if t.startswith("chimie") or t.startswith("biochimie"):
-        return "Chimie – Biochimie"
-    if t.startswith("stat"):
+    first_word = t.split()[0] if t.split() else ""
+    
+    if first_word == "biologie":
+        return "Biologie cellulaire"
+    elif first_word == "biophysique":
+        return "Biophysique"
+    elif first_word == "chimie":
+        return "Chimie"
+    elif first_word == "biochimie":
+        return "Biochimie"
+    elif first_word == "statistiques":
         return "Statistiques"
+    elif first_word == "consignes":
+        return UNKNOWN_SUBJECT
+    
     return UNKNOWN_SUBJECT
 
 # =========================
@@ -639,11 +674,11 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
 
     out: Dict[str, Dict[str, List[Dict]]] = {}
 
-    # BIO → sujet Biologie cellulaire – Histo-Embryo
+    # BIO → sujet Biologie cellulaire
     for dstr, title in rows_bio:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
-        subject = "Biologie cellulaire – Histo-Embryo"
+        subject = "Biologie cellulaire"
         safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
         safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
         item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
@@ -667,11 +702,11 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
             "date": d.strftime("%d/%m/%Y"),
         })
 
-    # Physique → sujet Physique – Biophysique
+    # Physique → sujet Physique
     for dstr, title in rows_phys:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
-        subject = "Physique – Biophysique"
+        subject = "Physique"
         safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
         safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
         item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
@@ -681,11 +716,11 @@ def build_upc_manual() -> Dict[str, Dict[str, List[Dict]]]:
             "date": d.strftime("%d/%m/%Y"),
         })
 
-    # Chimie/Biochimie → sujet Chimie – Biochimie
+    # Chimie/Biochimie → sujet Chimie ou Biochimie selon le titre
     for dstr, title in rows_cb:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
-        subject = "Chimie – Biochimie"
+        subject = classify_subject(title)  # Utilise la nouvelle classification
         safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
         safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
         item_id = f"UPC-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
@@ -731,12 +766,12 @@ UPC = build_upc_manual()
 # UVSQ — construit à partir de la liste fournie (sept → nov 2025)
 # =========================
 def subject_short_name(subject: str) -> str:
-    if subject == "Biologie cellulaire – Histo-Embryo":
-        return "Biologie cellulaire"
-    if subject == "Chimie – Biochimie":
-        return "Chimie – Biochimie"
-    if subject == "Physique – Biophysique":
-        return "Physique – Biophysique"
+    if subject == "Biologie cellulaire":
+        return "Biocell - Histo - Embryo"
+    if subject == "Chimie":
+        return "Chimie - Biochimie"
+    if subject == "Physique":
+        return "Physique - Biophysique"
     return "CM inconnu"
 
 def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str, Dict[str, List[Dict]]]:
@@ -782,11 +817,11 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
     # Regroupement par catégories communes
     def kind_to_subject(k: str) -> str:
         if k == "biohe":
-            return "Biologie cellulaire – Histo-Embryo"
+            return "Biologie cellulaire"
         if k == "chimiebioch":
-            return "Chimie – Biochimie"
+            return "Chimie"
         if k == "phys":
-            return "Physique – Biophysique"
+            return "Physique"
         return UNKNOWN_SUBJECT
 
     # Pour UVSQ: numérotation démarre à 1 pour chaque matière (indépendante de UPS)
@@ -941,14 +976,14 @@ with left:
     # Réduire l'espace entre filtres et tableau
     st.markdown('<div style="margin-bottom: 8px;"></div>', unsafe_allow_html=True)
 
-    # Entêtes tableau - plus de colonne matière, 7 colonnes pour les facultés
-    c0, c1, c2, c3, c4, c5, c6, c7 = st.columns([1, 1, 1, 1, 1, 1, 1, 1])
+    # Entêtes tableau - 7 colonnes pour les facultés avec largeurs optimisées
+    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1])
     for fac, c in zip(FACULTIES, [c0, c1, c2, c3, c4, c5, c6]):
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
     # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
     for subj in [s for s in SUBJECTS if query in s.lower()]:
-        r0, r1, r2, r3, r4, r5, r6, r7 = st.columns([1, 1, 1, 1, 1, 1, 1, 1], gap="large")
+        r0, r1, r2, r3, r4, r5, r6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
         
         def render_cell(col, fac):
             items = DATA.get(fac, {}).get(week, {}).get(subj, [])
@@ -1031,6 +1066,10 @@ with right:
          "https://moodle.u-paris.fr/",
          "lina.atea",
          "Monamalek93#"),
+        ("SU (Moodle Sciences, Mayla)",
+         "https://moodle-sciences-25.sorbonne-universite.fr/login/index.php",
+         "21505225",
+         "Mayla_MD-2008"),
     ]
     for title, url, login, pwd in blocks:
         st.markdown(
