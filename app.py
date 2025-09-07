@@ -845,21 +845,21 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
                 if subject == UNKNOWN_SUBJECT:
                     title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
                 else:
-                    # Affichage UVSQ personnalisé selon la matière - chaque matière a son propre titre
+                    # Affichage UVSQ personnalisé selon la matière
                     if subject == "Biologie cellulaire":
-                        title = f"Biologie cellulaire {num}"
+                        title = f"Biocell - Histo - Embryo {num}"
                     elif subject == "Histologie":
-                        title = f"Histologie {num}"
+                        title = f"Biocell - Histo - Embryo {num}"
                     elif subject == "Embryologie":
-                        title = f"Embryologie {num}"
+                        title = f"Biocell - Histo - Embryo {num}"
                     elif subject == "Chimie":
-                        title = f"Chimie {num}"
+                        title = f"Chimie - Biochimie {num}"
                     elif subject == "Biochimie":
-                        title = f"Biochimie {num}"
+                        title = f"Chimie - Biochimie {num}"
                     elif subject == "Physique":
-                        title = f"Physique {num}"
+                        title = f"Physique - Biophysique {num}"
                     elif subject == "Biophysique":
-                        title = f"Biophysique {num}"
+                        title = f"Physique - Biophysique {num}"
                     else:
                         title = f"{subject} {num}"
 
@@ -954,8 +954,8 @@ with left:
                     return w
         return all_weeks[0]
 
-    # Filtres avec date précise - espacement amélioré
-    ctop = st.columns([2.5, 1.5, 1.2, 1.0], gap="large")
+    # Filtres avec date précise
+    ctop = st.columns([2.5, 1.5, 1.2, 1.0])
     
     with ctop[0]:
         st.caption("Semaine")
@@ -990,24 +990,7 @@ with left:
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
     # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
-    # Ne montrer que les matières qui ont au moins un cours après filtrage
-    subjects_with_courses = []
     for subj in [s for s in SUBJECTS if query in s.lower()]:
-        has_courses = False
-        for fac in FACULTIES:
-            if specific_date:
-                target_date = specific_date.strftime("%d/%m/%Y")
-                all_items = DATA.get(fac, {}).get(week, {}).get(subj, [])
-                items = [it for it in all_items if it["date"] == target_date]
-            else:
-                items = DATA.get(fac, {}).get(week, {}).get(subj, [])
-            if items:
-                has_courses = True
-                break
-        if has_courses:
-            subjects_with_courses.append(subj)
-    
-    for subj in subjects_with_courses:
         r0, r1, r2, r3, r4, r5, r6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
         
         def render_cell(col, fac):
