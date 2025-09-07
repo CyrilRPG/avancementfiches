@@ -298,6 +298,11 @@ COMMON_HINTS = {
     "Statistiques",
     "SHS",
     "Santé publique",
+    "BDD",
+    "BDR",
+    "Anatomie",
+    "UEDS",
+    "UEDL",
 }
 UNKNOWN_SUBJECT = "CM inconnus"
 
@@ -875,6 +880,180 @@ def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str
 UVSQ = build_uvsq_from_list(UPS)
 
 # =========================
+# SU — Cours avec nouvelle nomenclature (sept → nov 2025)
+# =========================
+def build_su_manual() -> Dict[str, Dict[str, List[Dict]]]:
+    # Chaque ligne : (date_dd/mm/YYYY, UE, numéro)
+    rows: List[Tuple[str, str, int]] = []
+    def add(d: str, ue: str, num: int):
+        rows.append((d, ue, num))
+
+    # -------- Septembre 2025 --------
+    add("08/09/2025", "UE1", 1)
+    add("08/09/2025", "UE2", 1)
+    
+    add("09/09/2025", "UE1", 2)
+    add("09/09/2025", "UE2", 2)
+    
+    add("10/09/2025", "UE2", 3)
+    add("10/09/2025", "UEDS", 1)  # C1
+    add("10/09/2025", "UEDL", 1)
+    
+    add("11/09/2025", "UEDL", 2)
+    add("11/09/2025", "UEDS", 2)  # P1
+    add("11/09/2025", "UE5", 1)
+    
+    add("15/09/2025", "UE1", 3)
+    add("15/09/2025", "UE2", 4)
+    
+    add("16/09/2025", "UE1", 4)
+    add("16/09/2025", "UE2", 5)
+    
+    add("17/09/2025", "UE2", 6)
+    add("17/09/2025", "UEDS", 3)  # C2
+    add("17/09/2025", "UEDL", 3)
+    
+    add("18/09/2025", "UEDL", 4)
+    add("18/09/2025", "UEDS", 4)  # P2
+    add("18/09/2025", "UE5", 2)
+    
+    add("22/09/2025", "UE1", 5)
+    add("22/09/2025", "UE2", 7)
+    
+    add("23/09/2025", "UE1", 6)
+    add("23/09/2025", "UE2", 8)
+    
+    add("24/09/2025", "UE2", 9)
+    add("24/09/2025", "UEDS", 5)  # C3
+    add("24/09/2025", "UEDL", 5)
+    
+    add("25/09/2025", "UEDL", 6)
+    add("25/09/2025", "UEDS", 6)  # P3
+    
+    add("29/09/2025", "UE1", 7)
+    add("29/09/2025", "UE2", 10)
+    
+    add("30/09/2025", "UE1", 8)
+    add("30/09/2025", "UE2", 11)
+    
+    # -------- Octobre 2025 --------
+    add("01/10/2025", "UE2", 12)
+    add("01/10/2025", "UEDS", 7)  # C4
+    add("01/10/2025", "UEDL", 7)
+    
+    add("02/10/2025", "UEDS", 8)  # P4
+    add("02/10/2025", "UEDL", 8)
+    add("02/10/2025", "UE5", 3)
+    
+    add("06/10/2025", "UE1", 9)
+    add("06/10/2025", "UE2", 13)
+    
+    add("07/10/2025", "UE1", 10)
+    add("07/10/2025", "UE2", 14)
+    
+    add("08/10/2025", "UE2", 15)
+    add("08/10/2025", "UEDS", 9)  # C4 (répété dans l'exemple)
+    add("08/10/2025", "UEDL", 9)  # UEDL 7 → 9 pour éviter la duplication
+    
+    add("09/10/2025", "UEDS", 10)  # P5
+    add("09/10/2025", "UEDL", 10)
+    add("09/10/2025", "UE5", 4)
+    
+    add("13/10/2025", "UE1", 11)
+    add("13/10/2025", "UE2", 16)
+    
+    add("14/10/2025", "UE1", 12)
+    add("14/10/2025", "UE2", 17)
+    
+    add("15/10/2025", "UE2", 18)
+    add("15/10/2025", "UEDS", 11)  # C6
+    add("15/10/2025", "UEDL", 11)
+    
+    add("16/10/2025", "UEDL", 12)
+    add("16/10/2025", "UE5", 5)
+    
+    add("20/10/2025", "UE1", 13)
+    add("20/10/2025", "UE2", 19)
+    
+    add("21/10/2025", "UE1", 14)
+    add("21/10/2025", "UE2", 20)
+    
+    add("22/10/2025", "UE2", 21)
+    add("22/10/2025", "UEDS", 12)  # C7
+    add("22/10/2025", "UEDL", 13)
+    
+    add("23/10/2025", "UEDS", 13)  # C8
+    add("23/10/2025", "UEDL", 14)
+    add("23/10/2025", "UE5", 6)
+    
+    add("27/10/2025", "UE1", 15)
+    add("27/10/2025", "UE2", 22)
+    
+    add("28/10/2025", "UE1", 16)
+    add("28/10/2025", "UE2", 23)
+    
+    add("29/10/2025", "UE2", 24)
+    
+    add("30/10/2025", "UEDS", 14)  # P6
+    add("30/10/2025", "UE5", 7)
+    
+    # -------- Novembre 2025 --------
+    add("04/11/2025", "UE2", 25)
+    
+    add("06/11/2025", "UE5", 8)
+    add("06/11/2025", "UE5", 9)
+
+    # Tri chronologique
+    rows.sort(key=lambda x: parse_fr_date(x[0]))
+
+    out: Dict[str, Dict[str, List[Dict]]] = {}
+    for dstr, ue, num in rows:
+        d = parse_fr_date(dstr)
+        wlab = week_label_for(d)
+
+        # Conversion UE vers matières
+        if ue == "UE1":
+            subject = "Chimie"
+            title = f"Chimie, Biochimie {num}"
+            all_subjects_str = "Chimie, Biochimie"
+        elif ue == "UE2":
+            subject = "Biologie cellulaire"
+            title = f"Biologie cellulaire, Histologie, BDD, BDR {num}"
+            all_subjects_str = "Biologie cellulaire, Histologie, BDD, BDR"
+        elif ue == "UE5":
+            subject = "Anatomie"
+            title = f"Anatomie {num}"
+            all_subjects_str = "Anatomie"
+        elif ue == "UEDS":
+            subject = "UEDS"
+            title = f"UEDS {num}"
+            all_subjects_str = "UEDS"
+        elif ue == "UEDL":
+            subject = "UEDL"
+            title = f"UEDL {num}"
+            all_subjects_str = "UEDL"
+        else:
+            subject = UNKNOWN_SUBJECT
+            title = f"{ue} {num}"
+            all_subjects_str = ue
+
+        # ID stable
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"SU-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
+
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+            "all_subjects": all_subjects_str,
+        })
+
+    return out
+
+SU = build_su_manual()
+
+# =========================
 # DATA GLOBALE
 # =========================
 DATA = {
@@ -884,7 +1063,7 @@ DATA = {
     "L1 UPEC": {},
     "L2 UPEC": {},
     "USPN": {},
-    "SU": {},
+    "SU": SU,
 }
 FACULTIES = ["UPC", "UPS", "UVSQ", "L1 UPEC", "L2 UPEC", "USPN", "SU"]
 
