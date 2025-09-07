@@ -986,114 +986,95 @@ with left:
     for fac, c in zip(FACULTIES, [c0, c1, c2, c3, c4, c5, c6]):
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
-    # Lignes triées par fréquence décroissante (puis alpha), inconnus en bas
-    # Filtrer les matières en tenant compte des matières étendues ET vérifier qu'elles ont des cours
-    filtered_subjects = []
-    for subj in SUBJECTS:
-        has_courses_after_filter = False
-        
-        # Vérifier si cette matière a des cours après filtrage
-        for fac in FACULTIES:
-            # Récupérer les items de base
-            if specific_date:
-                target_date = specific_date.strftime("%d/%m/%Y")
-                all_items = DATA.get(fac, {}).get(week, {}).get(subj, [])
-                items = [it for it in all_items if it["date"] == target_date]
-            else:
-                items = DATA.get(fac, {}).get(week, {}).get(subj, [])
-            
-            # Appliquer le filtre de matière si nécessaire
-            if query:
-                filtered_items = []
-                for it in items:
-                    # Vérifier la matière principale
-                    if query in subj.lower():
-                        filtered_items.append(it)
-                    # Vérifier les matières étendues si disponibles
-                    elif it.get("all_subjects") and query in it["all_subjects"].lower():
-                        filtered_items.append(it)
-                items = filtered_items
-            
-            if items:
-                has_courses_after_filter = True
-                break
-        
-        if has_courses_after_filter:
-            filtered_subjects.append(subj)
+    # Organiser par faculté pour éviter les trous - affichage continu par colonne
+    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
     
-    for subj in filtered_subjects:
-        r0, r1, r2, r3, r4, r5, r6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
-        
-        def render_cell(col, fac):
-            # Si une date précise est sélectionnée, filtrer par cette date
-            if specific_date:
-                target_date = specific_date.strftime("%d/%m/%Y")
-                all_items = DATA.get(fac, {}).get(week, {}).get(subj, [])
-                items = [it for it in all_items if it["date"] == target_date]
-            else:
-                items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+    def render_faculty_column(col, fac):
+        """Affiche tous les cours d'une faculté de manière continue"""
+        with col:
+            st.markdown('<div class="rowline">', unsafe_allow_html=True)
             
-            # Filtrer par matière si nécessaire (pour les matières étendues)
-            if query:
-                filtered_items = []
-                for it in items:
-                    # Vérifier la matière principale
-                    if query in subj.lower():
-                        filtered_items.append(it)
-                    # Vérifier les matières étendues si disponibles
-                    elif it.get("all_subjects") and query in it["all_subjects"].lower():
-                        filtered_items.append(it)
-                items = filtered_items
-            
-            with col:
-                st.markdown('<div class="rowline">', unsafe_allow_html=True)
-                if not items:
-                    st.markdown('<span class="muted small">—</span>', unsafe_allow_html=True)
+            # Collecter tous les cours de cette faculté après filtrage
+            all_courses = []
+            for subj in SUBJECTS:
+                # Récupérer les items de base
+                if specific_date:
+                    target_date = specific_date.strftime("%d/%m/%Y")
+                    items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+                    items = [it for it in items if it["date"] == target_date]
                 else:
+                    items = DATA.get(fac, {}).get(week, {}).get(subj, [])
+                
+                # Appliquer le filtre de matière si nécessaire
+                if query:
+                    filtered_items = []
                     for it in items:
-                        cid = it.get("id") or it["title"]
-                        ck = make_key(fac, subj, week, cid)
-                        checked = st.session_state.get(ck, False)
-                        if fac == 'UPC':
-                            cell_cls = 'cell-upc'
-                        elif fac == 'UPS':
-                            cell_cls = 'cell-ups'
-                        elif fac == 'UVSQ':
-                            cell_cls = 'cell-uvsq'
-                        elif fac == 'L1 UPEC':
-                            cell_cls = 'cell-l1-upec'
-                        elif fac == 'L2 UPEC':
-                            cell_cls = 'cell-l2-upec'
-                        elif fac == 'USPN':
-                            cell_cls = 'cell-uspn'
-                        elif fac == 'SU':
-                            cell_cls = 'cell-su'
-                        else:
-                            cell_cls = 'cell-upc'
-                        st.markdown(f'<div class="cell {cell_cls} course-block">', unsafe_allow_html=True)
-                        st.markdown(f"**{it['title']}**")
-                        st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
-                        # Afficher toutes les matières si disponibles, sinon la matière principale
-                        subjects_to_show = it.get("all_subjects", subj)
-                        st.markdown(f'<span class="mini subject">{subjects_to_show}</span>', unsafe_allow_html=True)
-                        new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
-                        if new_val != checked:
-                            st.session_state[ck] = new_val
-                            save_progress()
-                        st.markdown(
-                            f"<span class='ok-pill'>{'OK' if new_val else 'À faire'}</span>",
-                            unsafe_allow_html=True,
-                        )
-                        st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-        render_cell(r0, "UPC")
-        render_cell(r1, "UPS")
-        render_cell(r2, "UVSQ")
-        render_cell(r3, "L1 UPEC")
-        render_cell(r4, "L2 UPEC")
-        render_cell(r5, "USPN")
-        render_cell(r6, "SU")
+                        # Vérifier la matière principale
+                        if query in subj.lower():
+                            filtered_items.append((it, subj))
+                        # Vérifier les matières étendues si disponibles
+                        elif it.get("all_subjects") and query in it["all_subjects"].lower():
+                            filtered_items.append((it, subj))
+                    items_with_subj = filtered_items
+                else:
+                    items_with_subj = [(it, subj) for it in items]
+                
+                all_courses.extend(items_with_subj)
+            
+            # Trier les cours par date
+            all_courses.sort(key=lambda x: x[0]["date"])
+            
+            if not all_courses:
+                st.markdown('<span class="muted small">—</span>', unsafe_allow_html=True)
+            else:
+                for it, subj in all_courses:
+                    cid = it.get("id") or it["title"]
+                    ck = make_key(fac, subj, week, cid)
+                    checked = st.session_state.get(ck, False)
+                    
+                    if fac == 'UPC':
+                        cell_cls = 'cell-upc'
+                    elif fac == 'UPS':
+                        cell_cls = 'cell-ups'
+                    elif fac == 'UVSQ':
+                        cell_cls = 'cell-uvsq'
+                    elif fac == 'L1 UPEC':
+                        cell_cls = 'cell-l1-upec'
+                    elif fac == 'L2 UPEC':
+                        cell_cls = 'cell-l2-upec'
+                    elif fac == 'USPN':
+                        cell_cls = 'cell-uspn'
+                    elif fac == 'SU':
+                        cell_cls = 'cell-su'
+                    else:
+                        cell_cls = 'cell-upc'
+                    
+                    st.markdown(f'<div class="cell {cell_cls} course-block">', unsafe_allow_html=True)
+                    st.markdown(f"**{it['title']}**")
+                    st.markdown(f'<span class="mini">{it["date"]}</span>', unsafe_allow_html=True)
+                    # Afficher toutes les matières si disponibles, sinon la matière principale
+                    subjects_to_show = it.get("all_subjects", subj)
+                    st.markdown(f'<span class="mini subject">{subjects_to_show}</span>', unsafe_allow_html=True)
+                    new_val = st.checkbox("Fiche déjà faite", value=checked, key=ck)
+                    if new_val != checked:
+                        st.session_state[ck] = new_val
+                        save_progress()
+                    st.markdown(
+                        f"<span class='ok-pill'>{'OK' if new_val else 'À faire'}</span>",
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Afficher chaque faculté dans sa colonne
+    render_faculty_column(c0, "UPC")
+    render_faculty_column(c1, "UPS")
+    render_faculty_column(c2, "UVSQ")
+    render_faculty_column(c3, "L1 UPEC")
+    render_faculty_column(c4, "L2 UPEC")
+    render_faculty_column(c5, "USPN")
+    render_faculty_column(c6, "SU")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
