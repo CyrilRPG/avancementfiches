@@ -1107,6 +1107,12 @@ def build_upec_l1_manual() -> Dict[str, Dict[str, List[Dict]]]:
         subject = ue
         title = cours
 
+        # Date : "-" pour tous sauf "Droit et santé" qui garde sa date précise
+        if subject == "Droit et santé":
+            display_date = d.strftime("%d/%m/%Y")
+        else:
+            display_date = "-"
+
         # ID stable
         safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
         safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
@@ -1115,7 +1121,7 @@ def build_upec_l1_manual() -> Dict[str, Dict[str, List[Dict]]]:
         out.setdefault(wlab, {}).setdefault(subject, []).append({
             "id": item_id,
             "title": title,
-            "date": d.strftime("%d/%m/%Y"),
+            "date": display_date,
             "all_subjects": subject,  # Pour la recherche
         })
 
@@ -1178,14 +1184,17 @@ st.markdown(
 )
 
 # =========================
-# LAYOUT 4/5 – 1/5
+# LAYOUT 5/6 – 1/6 (plus d'espace pour le tableau principal)
 # =========================
-left, right = st.columns([4, 1], gap="large")
+left, right = st.columns([5, 1], gap="large")
 
 # ------ AVANCEMENT ------
 with left:
     # Ajouter un espace entre header et filtres
     st.markdown('<div style="margin-top: 16px;"></div>', unsafe_allow_html=True)
+    
+    # Ajouter un espace avant le glass du tableau
+    st.markdown('<div style="margin-bottom: 12px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="glass">', unsafe_allow_html=True)
 
     # Semaine et filtres
@@ -1230,13 +1239,13 @@ with left:
     # Espacement entre filtres et tableau - agrandir le rectangle orange
     st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
 
-    # Entêtes tableau - 7 colonnes pour les facultés avec largeurs optimisées
-    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1])
+    # Entêtes tableau - 7 colonnes pour les facultés avec largeurs équilibrées
+    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.3, 1.3, 1.3, 1.2, 1.2, 1.2, 1.2])
     for fac, c in zip(FACULTIES, [c0, c1, c2, c3, c4, c5, c6]):
         c.markdown(f'<div class="table-head fac-head">{fac}</div>', unsafe_allow_html=True)
 
     # Organiser par faculté pour éviter les trous - affichage continu par colonne
-    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.2, 1.2, 1.2, 1.1, 1.1, 1.1, 1.1], gap="large")
+    c0, c1, c2, c3, c4, c5, c6 = st.columns([1.3, 1.3, 1.3, 1.2, 1.2, 1.2, 1.2], gap="large")
     
     def render_faculty_column(col, fac):
         """Affiche tous les cours d'une faculté de manière continue"""
@@ -1329,6 +1338,8 @@ with left:
 
 # ------ BOURSIERS ------
 with right:
+    # Ajouter un espace pour aligner avec le tableau principal
+    st.markdown('<div style="margin-top: 28px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="glass">', unsafe_allow_html=True)
     st.markdown("### Boursiers")
     blocks = [
