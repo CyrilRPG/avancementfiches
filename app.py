@@ -1382,7 +1382,7 @@ def build_upec_l2_manual() -> Dict[str, Dict[str, List[Dict]]]:
         out.setdefault(wlab, {}).setdefault(subject, []).append({
             "id": item_id,
             "title": title,
-            "date": "-",  # Date générique comme pour L1
+            "date": d.strftime("%d/%m/%Y"),
             "all_subjects": subject,  # Pour la recherche
         })
     
