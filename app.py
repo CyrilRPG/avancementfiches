@@ -1067,16 +1067,12 @@ def build_upec_l1_manual() -> Dict[str, Dict[str, List[Dict]]]:
     def add(d: str, ue: str, cours: str, enseignant: str):
         rows.append((d, ue, cours, enseignant))
 
-    # -------- Semaine 08/09-14/09 --------
-    # De l'atome aux molécules (Marie Claire Gazeau)
-    add("08/09/2025", "De l'atome aux molécules", "Notions fondamentales de la structure d'un atome, définitions", "Marie Claire Gazeau")
-    add("08/09/2025", "De l'atome aux molécules", "Modèle quantique de l'atome et organisation électronique de l'atome", "Marie Claire Gazeau")
-    add("08/09/2025", "De l'atome aux molécules", "Présentation du tableau de classification des éléments", "Marie Claire Gazeau")
-    add("08/09/2025", "De l'atome aux molécules", "La liaison chimique (ionique, covalente) modèle de Lewis", "Marie Claire Gazeau")
-    add("08/09/2025", "De l'atome aux molécules", "Notion d'électronégativité, liaisons polarisées et molécules polaires", "Marie Claire Gazeau")
-    add("08/09/2025", "De l'atome aux molécules", "Etat de la matière", "Marie Claire Gazeau")
-    
-    # De l'atome aux molécules (Emmanuel Itti)
+    # -------- Semaine 0 (06/10/2024) --------
+    add("06/10/2024", "Réunion de rentrée", "REUNION DE RENTREE le jeudi 4 septembre 2025", "Equipe pédagogique et administrative")
+    add("06/10/2024", "Réunion de rentrée", "Bienvenue à la faculté de santé", "Cellule TICE – Sabrina Oliva")
+
+    # -------- Semaine 1 (08/09-12/09) --------
+    # De l'atome aux molécules
     add("08/09/2025", "De l'atome aux molécules", "Particules élémentaires, notion de nucléide", "Emmanuel Itti")
     add("08/09/2025", "De l'atome aux molécules", "Forces d'interaction", "Emmanuel Itti")
     add("08/09/2025", "De l'atome aux molécules", "Modèle quantique, énergie de liaison", "Emmanuel Itti")
@@ -1090,10 +1086,305 @@ def build_upec_l1_manual() -> Dict[str, Dict[str, List[Dict]]]:
     add("08/09/2025", "Environnement urbain et santé", "Introduction à la géographie de la santé", "Léa Prost-Lançon")
     
     # Fondements philosophiques de l'éthique médicale
-    add("08/09/2025", "Fondements philosophiques de l'éthique médicale", "Problématiques fondamentales de la relation entre philosophie, éthique et médecine", "Elodie Boublil")
+    add("08/09/2025", "Fondements philosophiques de l'éthique médicale", "Philosophie, éthique et médecine : introduction", "Elodie Boublil")
     
     # Droit et santé (avec date précise : lundi 08/09 17h-19h)
     add("08/09/2025", "Droit et santé", "La norme juridique et la hiérarchie des normes", "Alison Linon")
+    
+    # Anglais médical
+    add("08/09/2025", "Anglais médical", "Health careers", "Fanny Tison-Harinte")
+    add("10/09/2025", "Anglais médical", "Q&A1 – Introduction", "Fanny Tison-Harinte")
+
+    # -------- Semaine 2 (15/09-19/09) --------
+    # De l'atome aux molécules
+    add("15/09/2025", "De l'atome aux molécules", "Modèle quantique, énergie de liaison", "Emmanuel Itti")
+    add("15/09/2025", "De l'atome aux molécules", "Stabilité du noyau, transitions nucléaires", "Emmanuel Itti")
+    add("15/09/2025", "De l'atome aux molécules", "Fission et fusion", "Emmanuel Itti")
+    add("15/09/2025", "De l'atome aux molécules", "Généralité sur le 'chimie organique'", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Fonctions chimiques et degrés de fonctions", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Conformations de chaines", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Conformation de cycle", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Isomérie optique et asymétrie", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Isomérie géométrique et configuration", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Effets inductifs", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Effets mésomères", "Christophe PICHON")
+    add("15/09/2025", "De l'atome aux molécules", "Influence des effets électroniques sur la géométrie et la réactivités de biomolécules", "Christophe PICHON")
+    
+    # Environnement urbain et santé
+    add("15/09/2025", "Environnement urbain et santé", "Les inégalités spatiales de santé, reflet des inégalités en lien avec les condition de vie", "Léa Prost-Lançon")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("15/09/2025", "Fondements philosophiques de l'éthique médicale", "L'éthique des vertus", "Elodie Boublil")
+    
+    # Humanités en santé
+    add("15/09/2025", "Humanités en santé", "De l'époque hellénistique à Galien : la médecine à Alexandrie et à Rome (IIIe s. av. JC - IIe s. ap. JC)", "Thibault Miguet")
+    
+    # Droit et santé
+    add("16/09/2025", "Droit et santé", "La norme juridique et la hiérarchie des normes", "Alison Linon")
+
+    # -------- Semaine 3 (22/09-26/09) --------
+    # De la cellule aux tissus
+    add("22/09/2025", "De la cellule aux tissus", "Introduction à la biologie cellulaire", "José Cohen")
+    add("22/09/2025", "De la cellule aux tissus", "Introduction à la Biologie systémique de la cellule I", "Abdel Aïssat")
+    add("22/09/2025", "De la cellule aux tissus", "La membrane plasmique (composition, structure et diversité) 1", "José Cohen")
+    add("22/09/2025", "De la cellule aux tissus", "La membrane plasmique (composition, structure et diversité) 2", "José Cohen")
+    add("22/09/2025", "De la cellule aux tissus", "La mitochondrie", "Anaïs Pujals")
+    add("22/09/2025", "De la cellule aux tissus", "Le noyau cellulaire : centre de contrôle de la vie de la cellule 1", "Anaïs Pujals")
+    add("22/09/2025", "De la cellule aux tissus", "Le peroxysome", "Asma Ferchiou")
+    add("22/09/2025", "De la cellule aux tissus", "Le système endo-membranaire. RE-Golgi", "Asma Ferchiou")
+    add("22/09/2025", "De la cellule aux tissus", "Le système endo-membranaire. lysosomes, endosomes", "Asma Ferchiou")
+    
+    # Humanités en santé
+    add("22/09/2025", "Humanités en santé", "Introduction générale à l'histoire de la médecine moderne et contemporaine", "Roberto Poma")
+    add("22/09/2025", "Humanités en santé", "La médecine à l'époque tardo-antique et médiévale (jusqu'au XIe s.) : histoire d'un transfert d'Orient vers Occident", "Thibault Miguet")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("22/09/2025", "Fondements philosophiques de l'éthique médicale", "L'approche déontologique en éthique médicale et en bioéthique", "Elodie Boublil")
+    
+    # Environnement urbain et santé
+    add("22/09/2025", "Environnement urbain et santé", "Interactions santé-environnement", "Léa Prost-Lançon")
+    
+    # Anglais médical
+    add("22/09/2025", "Anglais médical", "Anatomy - Basics", "Fanny Tison-Harinte")
+    
+    # Humanités en santé (présentiel)
+    add("23/09/2025", "Humanités en santé", "Méthodo analyse de texte", "Elodie Boublil Thibault Miguet David Simard")
+    
+    # Droit et santé
+    add("23/09/2025", "Droit et santé", "La distinction des droits public et privé, positif et naturel, et la séparation des pouvoirs", "Alison Linon")
+
+    # -------- Semaine 4 (29/09-03/10) --------
+    # De la cellule aux tissus
+    add("29/09/2025", "De la cellule aux tissus", "Le cytosquelette : les filaments intermédiaires", "Anaïs Pujals")
+    add("29/09/2025", "De la cellule aux tissus", "La cellule et son environnement : récepteurs-médiateurs", "Anaïs Pujals")
+    add("29/09/2025", "De la cellule aux tissus", "Dogme de la biologie moléculaire, les acides nucléiques", "José Cohen")
+    add("29/09/2025", "De la cellule aux tissus", "Réplication de l'ADN / Transcription", "Sylvain Loric")
+    add("29/09/2025", "De la cellule aux tissus", "Code génétique et traduction", "Sylvain Loric")
+    add("29/09/2025", "De la cellule aux tissus", "Propriétés de la molécule d'ADN/ Organisation génomique de l'ADN", "Sylvain Loric")
+    add("29/09/2025", "De la cellule aux tissus", "Transmission allélique mendeléienne /allèles et polymorphismes", "Sylvain Loric")
+    add("29/09/2025", "De la cellule aux tissus", "Le cytosquelette : Microfilaments d'actine", "Anaïs Pujals")
+    add("29/09/2025", "De la cellule aux tissus", "Le cytosquelette : les microtubules", "Anaïs Pujals")
+    
+    # Humanités en santé
+    add("29/09/2025", "Humanités en santé", "La médecine médiévale du XIIe s. jusqu'à la fin du Moyen Âge : l'âge d'or des universités", "Thibault Miguet")
+    add("29/09/2025", "Humanités en santé", "La médecine de la fin du Moyen Âge et de la Renaissance", "Roberto Poma")
+    
+    # Environnement urbain et santé
+    add("29/09/2025", "Environnement urbain et santé", "Villes et santé", "Léa Prost-Lançon")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("29/09/2025", "Fondements philosophiques de l'éthique médicale", "L'approche conséquentialiste en éthique médicale et en bioéthique", "Elodie Boublil")
+    
+    # Droit et santé
+    add("30/09/2025", "Droit et santé", "La hiérarchie des juridictions et le procès", "Alison Linon")
+    
+    # Humanités en santé (présentiel)
+    add("30/09/2025", "Humanités en santé", "Méthodologie", "Elodie Boublil Thibault Miguet David Simard")
+
+    # -------- Semaine 5 (06/10-10/10) --------
+    # De la cellule aux tissus
+    add("06/10/2025", "De la cellule aux tissus", "Structure et propriétés des AA", "Sylvain Loric")
+    add("06/10/2025", "De la cellule aux tissus", "Structure primaire et liaison peptidique - Structures secondaires, tertiaire et quaternaire des protéines", "Sylvain Loric")
+    add("06/10/2025", "De la cellule aux tissus", "Introduction au métabolisme énergétique (ATP...)", "Pascale Fanen")
+    add("06/10/2025", "De la cellule aux tissus", "Schéma général des voies métaboliques : oses, AA, acides gras", "Pascale Fanen")
+    add("06/10/2025", "De la cellule aux tissus", "Glucides : Oses simples ou monosaccharides - Oses complexes ou polysaccharide - Un exemple de voie métabolique des oses : la glycolyse", "Pascale Fanen")
+    add("06/10/2025", "De la cellule aux tissus", "Le catabolisme des acides gras et cétogenèse", "Pascale Fanen")
+    add("06/10/2025", "De la cellule aux tissus", "Division et prolifération cellulaire", "Anaïs Pujals")
+    add("06/10/2025", "De la cellule aux tissus", "Introduction à la Biologie systémique de la cellule II", "Abdel Aïssat")
+    add("06/10/2025", "De la cellule aux tissus", "Apoptose", "Anaïs Pujals")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("06/10/2025", "Fondements philosophiques de l'éthique médicale", "Les courants du principisme, de l'éthique de la discussion et des théories de la justice en éthique médicale et en bioéthique", "Elodie Boublil")
+    
+    # Humanités en santé
+    add("06/10/2025", "Humanités en santé", "Aperçu de l'évolution des méthodes scientifiques et des pratiques de soin dans la médecine des XVIIe et XVIIIe siècles", "Roberto Poma")
+    
+    # Anglais médical
+    add("06/10/2025", "Anglais médical", "Public health - Obesity", "Fanny Tison-Harinte")
+    
+    # Droit et santé
+    add("07/10/2025", "Droit et santé", "Notion et fondement de la responsabilité juridique", "Alison Linon")
+    
+    # Humanités en santé (présentiel)
+    add("07/10/2025", "Humanités en santé", "Cours 1", "Roberto Poma")
+
+    # -------- Semaine 6 (13/10-17/10) --------
+    # De la cellule aux tissus
+    add("13/10/2025", "De la cellule aux tissus", "Néoglucogenèse et voie des pentoses", "Pascale Fanen")
+    add("13/10/2025", "De la cellule aux tissus", "Cycle de Krebs et phosphorylation oxydative", "Pascale Fanen")
+    add("13/10/2025", "De la cellule aux tissus", "Organisation des cellules en tissus et organes", "Jeanne Tran Van Nhieu")
+    add("13/10/2025", "De la cellule aux tissus", "Introduction à l'histologie et principes de l'histologie moléculaire", "François Jérôme Authier")
+    add("13/10/2025", "De la cellule aux tissus", "La cellule épithéliale", "François Jérôme Authier")
+    add("13/10/2025", "De la cellule aux tissus", "Les épithéliums", "François Jérôme Authier")
+    add("13/10/2025", "De la cellule aux tissus", "Tissus conjonctifs", "François Jérôme Authier")
+    add("13/10/2025", "De la cellule aux tissus", "Microenvironnement cellulaire", "Jeanne Tran Van Nhieu")
+    add("13/10/2025", "De la cellule aux tissus", "Os et cartilages", "Piotr Topilko")
+    add("13/10/2025", "De la cellule aux tissus", "Tissus Musculaires", "François Jérôme Authier")
+    add("13/10/2025", "De la cellule aux tissus", "Tissus nerveux 1 (SNP)", "Piotr Topilko")
+    add("13/10/2025", "De la cellule aux tissus", "Tissus nerveux 2 (SNC)", "Piotr Topilko")
+    
+    # Science politique, droits humains et droit à la santé
+    add("13/10/2025", "Science politique, droits humains et droit à la santé", "Notions fondamentales de théorie politique", "Thémis Andéol Lê Quan Phong")
+    
+    # Histoire et épistémologie de la pensée médicale et sanitaire
+    add("13/10/2025", "Histoire et épistémologie de la pensée médicale et sanitaire", "Cours2", "Roberto Poma")
+    
+    # Droit et santé
+    add("14/10/2025", "Droit et santé", "Les conditions de la responsabilité juridique", "Alison Linon")
+
+    # -------- Semaine 7 (20/10-24/10) --------
+    # L'organisme face aux agents pathogènes
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "Capsule introductive (Présentation du tissu sanguin, du programme et des intervenants)", "Ivan Sloma")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "1. L'hématopoïèse et sa régulation", "Ivan Sloma")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "a. Hématopoïèse", "Ivan Sloma")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "b. Régulation de l'hématopoïèse", "Ivan Sloma")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "2. Globules rouges et groupes sanguins", "Violaine Tran Quang")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "a. Les globules rouges", "Violaine Tran Quang")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "b. les groupes sanguins", "Violaine Tran Quang / France Pirenne")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "3. Plaquettes et physiologie de l' Hémostase", "Violaine Tran Quang")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "a. Les plaquettes", "Violaine Tran Quang")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "b. Physiologie de l'hémostase", "Béatrice Fareau-Saposnik")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "Présentation du système immunitaire", "Allan Thiolat")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "Anatomie du système immunitaire", "Allan Thiolat")
+    add("20/10/2025", "L'organisme face aux agents pathogènes", "Principe de l'hémogramme", "Orianne Wagner-Ballon")
+    
+    # Science politique, droits humains et droit à la santé
+    add("20/10/2025", "Science politique, droits humains et droit à la santé", "Politiques publiques de la Santé en France", "Thémis Andéol Lê Quan Phong")
+    
+    # Humanités en santé
+    add("20/10/2025", "Humanités en santé", "Introduction aux fondements de l'épistémologie", "Elodie Boublil")
+    add("20/10/2025", "Humanités en santé", "Cours3", "Roberto Poma")
+    
+    # Anglais médical
+    add("20/10/2025", "Anglais médical", "Drugs", "Fanny Tison-Harinte")
+    
+    # Droit et santé
+    add("21/10/2025", "Droit et santé", "Eléments spécifiques au droit de la responsabilité médicale", "Alison Linon")
+
+    # -------- Semaine 8 (27/10-31/10) --------
+    # L'organisme face aux agents pathogènes
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Immunité innée : les acteurs moléculaires", "Allan Thiolat")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Immunité innée : les acteurs moléculaires", "Allan Thiolat")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Présentation antigénique : le complexe majeur d'histocompatibilité", "Allan Thiolat")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Présentation antigénique : les récepteurs antigèniques", "Allan Thiolat")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Immunité adaptative : les lymphocytes", "Allan Thiolat")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "les Lymphocytes T", "S. Gallien")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "les Lymphocytes B", "Allan Thiolat")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "a. Notion d'immunité anti-infectieuse", "Sihem Tarfi")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "b. L'hygiène et la vaccination", "JW. Decousser")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "c. Les antiinfectieux", "PL. Woerther")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Le monde des infections bactérienne: Typhoïde", "M. Danjean")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Le monde des infections virales : Grippe", "Amandine Caillault")
+    add("27/10/2025", "L'organisme face aux agents pathogènes", "Le monde des infections parasitaires: Bilharziose", "F. Botterel")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("27/10/2025", "Fondements philosophiques de l'éthique médicale", "Réflexion en éthique médicale sur la fin de vie", "Elodie Boublil")
+    
+    # Humanités en santé
+    add("27/10/2025", "Humanités en santé", "Les concepts de normal et de pathologique", "Elodie Boublil")
+
+    # -------- Semaine 9 (03/11-07/11) --------
+    # Reproduction et développement
+    add("03/11/2025", "Reproduction et développement", "Généralités en anatomie", "Peggy lafuste")
+    add("03/11/2025", "Reproduction et développement", "Urètre", "Peggy lafuste")
+    add("03/11/2025", "Reproduction et développement", "Prostate", "Peggy lafuste")
+    add("03/11/2025", "Reproduction et développement", "Testicule et voies spermatiques", "Peggy lafuste")
+    add("03/11/2025", "Reproduction et développement", "Pénis", "Peggy lafuste")
+    add("03/11/2025", "Reproduction et développement", "Utérus et annexes", "Peggy lafuste")
+    add("03/11/2025", "Reproduction et développement", "Vagin et pudendum", "Peggy lafuste")
+    
+    # Compétences transversales
+    add("03/11/2025", "Compétences transversales", "Compétences informationnelles", "Pierre-Félix Tellier")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("03/11/2025", "Fondements philosophiques de l'éthique médicale", "Fondements de la 'relation de soin' et enjeux éthiques de la relation médecin/patient (théories de l'empathie et notion de vulnérabilité)", "Elodie Boublil")
+    
+    # Organisation du système de santé
+    add("03/11/2025", "Organisation du système de santé", "Les différentes dimensions d'un système de santé, les réformes et le paysage institutionnel en France", "Céleste Fournier")
+    
+    # Humanités en santé
+    add("03/11/2025", "Humanités en santé", "Les approches contemporaines des définitions de la santé", "Elodie Boublil")
+    
+    # Anglais médical
+    add("03/11/2025", "Anglais médical", "Public Health - Pregnancy", "Fanny Tison-Harinte")
+
+    # -------- Semaine 10 (10/11-14/11) --------
+    # TD Hémato-Immuno-Infection en présentiel
+    add("10/11/2025", "TD Hémato-Immuno-Infection", "TD Hémato-Immuno-Infection en présentiel", "Équipe pédagogique")
+    
+    # Reproduction et développement
+    add("10/11/2025", "Reproduction et développement", "Physiologie de la reproduction", "Hélène Bry")
+    add("10/11/2025", "Reproduction et développement", "a. Action des hormones (testicules et ovaires)", "Hélène Bry")
+    add("10/11/2025", "Reproduction et développement", "b. Cycle ovarien et vie reproductive", "Hélène Bry")
+    add("10/11/2025", "Reproduction et développement", "Méïose", "Peggy Lafuste")
+    add("10/11/2025", "Reproduction et développement", "Gametogénèse (ovogenèse/folliculogenèse,spermatogenèse)", "Peggy Lafuste")
+    add("10/11/2025", "Reproduction et développement", "Fécondation", "Peggy Lafuste")
+    add("10/11/2025", "Reproduction et développement", "Cellules souches", "Piotr Topilko")
+    add("10/11/2025", "Reproduction et développement", "Détermination embryonnaire", "Fred Relaix")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("10/11/2025", "Fondements philosophiques de l'éthique médicale", "Les situations de handicap", "Elodie Boublil")
+    
+    # Organisation du système de santé
+    add("10/11/2025", "Organisation du système de santé", "L'analyse économique des biens soin et santé et le concept de marché des soins", "Isabelle Durand-Zaleski")
+    
+    # Science politique, droits humains et droit à la santé
+    add("10/11/2025", "Science politique, droits humains et droit à la santé", "Sociologie politique, droits humains et droit à la santé", "Fabien Carrié")
+    
+    # Humanités en santé
+    add("10/11/2025", "Humanités en santé", "Les principales cultures médicales", "David Simard")
+    
+    # Compétences transversales
+    add("10/11/2025", "Compétences transversales", "Compétences informationnelles", "Pierre-Félix Tellier")
+
+    # -------- Semaine 11 (17/11-21/11) --------
+    # Reproduction et développement
+    add("17/11/2025", "Reproduction et développement", "Embryogénèse 1", "Fred Relaix")
+    add("17/11/2025", "Reproduction et développement", "Embryogénèse 2", "Fred Relaix")
+    add("17/11/2025", "Reproduction et développement", "Embryogénèse 3", "Fred Relaix")
+    add("17/11/2025", "Reproduction et développement", "Embryogénèse 4", "Fred Relaix")
+    add("17/11/2025", "Reproduction et développement", "Myogenèse", "Fred Relaix")
+    add("17/11/2025", "Reproduction et développement", "Nidation/implantation", "François Jérôme Authier")
+    add("17/11/2025", "Reproduction et développement", "Développement des villosités choriales", "François Jérôme Authier")
+    add("17/11/2025", "Reproduction et développement", "Formation du cordon et des membranes", "François Jérôme Authier")
+    add("17/11/2025", "Reproduction et développement", "Circulation placentaire", "François Jérôme Authier")
+    
+    # Organisation du système de santé
+    add("17/11/2025", "Organisation du système de santé", "La couverture du risque santé", "Yann Videau")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("17/11/2025", "Fondements philosophiques de l'éthique médicale", "Les situations de vulnérabilité liées au grand âge", "Elodie Boublil")
+    
+    # Science politique, droits humains et droit à la santé
+    add("17/11/2025", "Science politique, droits humains et droit à la santé", "Action publique, droits humains et droit à la santé", "Fabien Carrié")
+    
+    # Humanités en santé
+    add("17/11/2025", "Humanités en santé", "Epistémologie de l'essai clinique contrôlé randomisé", "David Simard")
+
+    # -------- Semaine 12 (24/11-28/11) --------
+    # Organisation du système de santé
+    add("24/11/2025", "Organisation du système de santé", "Les dépenses de santé et leur financement", "Mathias Béjean")
+    
+    # Fondements philosophiques de l'éthique médicale
+    add("24/11/2025", "Fondements philosophiques de l'éthique médicale", "L'éthique du soin dans le contexte de la médecine humanitaire, le soin des personnes victimes de violences et de psychotraumatisme", "Elodie Boublil")
+    
+    # Science politique, droits humains et droit à la santé
+    add("24/11/2025", "Science politique, droits humains et droit à la santé", "Mouvements sociaux, droits humains et droit à la santé", "Fabien Carrié")
+    
+    # Humanités en santé
+    add("24/11/2025", "Humanités en santé", "Etude d'une controverse épistémologique et éthique contemporaine : le traitement de la COVID-19", "David Simard")
+
+    # -------- Semaine 13 (01/12-05/12) --------
+    # Semaine interactive de réponses aux questions
+    add("01/12/2025", "Q&A", "Q&A2 – Révision", "Fanny Tison-Harinte")
+
+    # -------- Semaine 14 (08/12-12/12) --------
+    # Semaine de révision
+    add("08/12/2025", "Révision", "Semaine de révision", "Équipe pédagogique")
+
+    # -------- Semaine 15 (15/12-19/12) --------
+    # Examen terminal
+    add("15/12/2025", "Examen", "EXAMEN TERMINAL", "Équipe pédagogique")
 
     # Tri chronologique
     rows.sort(key=lambda x: parse_fr_date(x[0]))
