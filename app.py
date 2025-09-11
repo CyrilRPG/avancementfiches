@@ -786,103 +786,120 @@ def subject_short_name(subject: str) -> str:
         return "Physique - Biophysique"
     return "CM inconnu"
 
-def build_uvsq_from_list(ups_data: Dict[str, Dict[str, List[Dict]]]) -> Dict[str, Dict[str, List[Dict]]]:
-    # Chaque ligne utilisateur compte pour 1 cours dans la catégorie correspondante.
-    # kind in {"biohe", "chimiebioch", "phys", "unknown"}
-    raw_plan: List[Tuple[str, List[Tuple[str, Optional[str]]]]] = []
+def build_uvsq_manual() -> Dict[str, Dict[str, List[Dict]]]:
+    # Chaque ligne : (date_dd/mm/YYYY, titre du cours)
+    rows: List[Tuple[str, str]] = []
+    def add(d: str, title: str):
+        rows.append((d, title))
 
-    def add_day(d: str, entries: List[Tuple[str, Optional[str]]]):
-        raw_plan.append((d, entries))
+    # -------- Septembre 2025 --------
+    add("08/09/2025", "Chimie biochimie 1")
+    add("08/09/2025", "Biocell histo embryo 1")
 
-    # Septembre 2025
-    add_day("02/09/2025", [("chimiebioch", None), ("biohe", None)])
-    add_day("03/09/2025", [("biohe", None), ("chimiebioch", None)])
-    add_day("08/09/2025", [("chimiebioch", None), ("biohe", None)])
-    add_day("09/09/2025", [("biohe", None), ("chimiebioch", None), ("biohe", None)])
-    add_day("10/09/2025", [("chimiebioch", None)])
-    add_day("15/09/2025", [("chimiebioch", None), ("chimiebioch", None), ("biohe", None)])
-    add_day("16/09/2025", [("chimiebioch", None), ("phys", None)])
-    add_day("17/09/2025", [("biohe", None), ("chimiebioch", None)])
-    add_day("22/09/2025", [("biohe", None), ("chimiebioch", None), ("biohe", None), ("chimiebioch", None), ("biohe", None)])
-    add_day("23/09/2025", [("biohe", None), ("chimiebioch", None), ("chimiebioch", None)])
-    add_day("24/09/2025", [("biohe", None), ("chimiebioch", None)])
-    add_day("29/09/2025", [("phys", None), ("biohe", None), ("biohe", None)])
-    add_day("30/09/2025", [("phys", None), ("phys", None), ("biohe", None), ("biohe", None)])
-    # Octobre 2025
-    add_day("01/10/2025", [("unknown", None)])
-    add_day("06/10/2025", [("biohe", None), ("chimiebioch", None), ("biohe", None), ("biohe", None)])
-    add_day("07/10/2025", [("chimiebioch", None), ("chimiebioch", None), ("chimiebioch", None)])
-    add_day("08/10/2025", [("biohe", None), ("chimiebioch", None)])
-    add_day("13/10/2025", [("biohe", None), ("biohe", None)])
-    add_day("14/10/2025", [("chimiebioch", None), ("chimiebioch", None), ("biohe", None)])
-    add_day("15/10/2025", [("biohe", None), ("biohe", None)])
-    add_day("27/10/2025", [("unknown", "10 heures")])
-    add_day("28/10/2025", [("unknown", "10 heures")])
-    add_day("29/10/2025", [("unknown", "4 heures")])
-    # Novembre 2025
-    add_day("03/11/2025", [("phys", None)])
-    add_day("04/11/2025", [("chimiebioch", None), ("chimiebioch", None)])
-    add_day("05/11/2025", [("unknown", "4 heures")])
-    add_day("10/11/2025", [("biohe", None), ("phys", None)])
-    add_day("11/11/2025", [("unknown", "10 heures")])
+    add("09/09/2025", "Biostatistiques 1")
+    add("09/09/2025", "Biocell histo embryo 2")
+    add("09/09/2025", "Biocell histo embryo 3")
 
-    # Regroupement par catégories communes - pour UVSQ on garde une entrée mais avec toutes les matières
-    def kind_to_subject_and_all_subjects(k: str) -> Tuple[str, List[str]]:
-        if k == "biohe":
-            return "Biologie cellulaire", ["Biologie cellulaire", "Histologie", "Embryologie"]
-        if k == "chimiebioch":
-            return "Chimie", ["Chimie", "Biochimie"]
-        if k == "phys":
-            return "Physique", ["Physique", "Biophysique"]
-        return UNKNOWN_SUBJECT, [UNKNOWN_SUBJECT]
+    add("10/09/2025", "Biostatistiques 2")
+    add("10/09/2025", "Chimie biochimie 2")
 
-    # Pour UVSQ: numérotation démarre à 1 pour chaque matière (indépendante de UPS)
+    add("15/09/2025", "Biostatistiques 3")
+    add("15/09/2025", "Chimie biochimie 3")
+    add("15/09/2025", "Chimie biochimie 4")
+    add("15/09/2025", "Bio cell histo embryo 4")
+
+    add("16/09/2025", "Biostatistiques 4")
+    add("16/09/2025", "Chimie biochimie 5")
+    add("16/09/2025", "Chimie biochimie 6")
+    add("16/09/2025", "Physique biophysique 1")
+
+    add("17/09/2025", "Bio cell histo embryo 5")
+    add("17/09/2025", "Chimie biochimie 7")
+
+    add("22/09/2025", "Bio cell histo embryo 6")
+    add("22/09/2025", "Bio cell histo embryo 7")
+    add("22/09/2025", "Chimie biochimie 8")
+
+    add("23/09/2025", "Biostatistiques 5")
+    add("23/09/2025", "Bio cell histo embryo 8")
+    add("23/09/2025", "Chimie biochimie 9")
+    add("23/09/2025", "Chimie biochimie 10")
+
+    add("24/09/2025", "Bio cell histo embryo 9")
+    add("24/09/2025", "Chimie biochimie 11")
+
+    add("29/09/2025", "Physique biophysique 2")
+    add("29/09/2025", "Physique biophysique 3")
+    add("29/09/2025", "Bio cell histo embryo 10")
+    add("29/09/2025", "Bio cell histo embryo 11")
+
+    # -------- Octobre 2025 --------
+    add("06/10/2025", "Bio cell histo embryo 12")
+    add("06/10/2025", "Chimie biochimie 12")
+    add("06/10/2025", "Bio cell histo embryo 13")
+    add("06/10/2025", "Bio cell histo embryo 14")
+
+    add("07/10/2025", "Biostatistiques 6")
+    add("07/10/2025", "Chimie biochimie 13")
+    add("07/10/2025", "Chimie biochimie 14")
+    add("07/10/2025", "Chimie biochimie 15")
+
+    add("08/10/2025", "Bio cell histo embryo 15")
+    add("08/10/2025", "Chimie biochimie 16")
+
+    add("13/10/2025", "Bio cell histo embryo 16")
+    add("13/10/2025", "Bio cell histo embryo 17")
+
+    add("14/10/2025", "Biostatistiques 7")
+    add("14/10/2025", "Chimie biochimie 17")
+    add("14/10/2025", "Chimie biochimie 18")
+    add("14/10/2025", "Bio cell histo embryo 18")
+
+    add("15/10/2025", "Bio cell histo embryo 19")
+    add("15/10/2025", "Bio cell histo embryo 20")
+
+    add("27/10/2025", "Physique biophysique 4")
+
+    add("28/10/2025", "Biostatistiques 8")
+    add("28/10/2025", "Physique biophysique 5")
+
+    # -------- Novembre 2025 --------
+    add("03/11/2025", "Physique biophysique 6")
+
+    add("04/11/2025", "Biostatistiques 9")
+    add("04/11/2025", "Chimie biochimie 19")
+    add("04/11/2025", "Chimie biochimie 20")
+
+    add("10/11/2025", "Bio cell histo embryo 21")
+    add("10/11/2025", "Physique biophysique 7")
+
+    add("11/11/2025", "CM inconnu 8h 18h")
+
+    # Tri chronologique
+    rows.sort(key=lambda x: parse_fr_date(x[0]))
+
     out: Dict[str, Dict[str, List[Dict]]] = {}
-    raw_plan.sort(key=lambda x: parse_fr_date(x[0]))
-    seq: Dict[str, int] = {}
-
-    for dstr, entries in raw_plan:
+    for dstr, title in rows:
         d = parse_fr_date(dstr)
         wlab = week_label_for(d)
-        for kind, detail in entries:
-            subject, all_subjects = kind_to_subject_and_all_subjects(kind)
-            
-            seq.setdefault(subject, 0)
-            seq[subject] += 1
-            num = seq[subject]
 
-            if subject == UNKNOWN_SUBJECT:
-                title = f"CM inconnu {num}" + (f" — durée: {detail}" if detail else "")
-                all_subjects_str = "CM inconnus"
-            else:
-                # Affichage UVSQ personnalisé selon la matière
-                if subject == "Biologie cellulaire":
-                    title = f"Biocell - Histo - Embryo {num}"
-                    all_subjects_str = "Biologie cellulaire, Histologie, Embryologie"
-                elif subject == "Chimie":
-                    title = f"Chimie - Biochimie {num}"
-                    all_subjects_str = "Chimie, Biochimie"
-                elif subject == "Physique":
-                    title = f"Physique - Biophysique {num}"
-                    all_subjects_str = "Physique, Biophysique"
-                else:
-                    title = f"{subject} {num}"
-                    all_subjects_str = subject
+        # Classification des matières
+        subject = classify_subject(title)
+        
+        # ID stable
+        safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
+        safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
 
-            safe_subj = re.sub(r'[^a-z0-9]+', '_', subject.lower())
-            safe_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
-            item_id = f"UVSQ-{safe_subj}-{safe_title}-{d.strftime('%Y%m%d')}"
-
-            out.setdefault(wlab, {}).setdefault(subject, []).append({
-                "id": item_id,
-                "title": title,
-                "date": d.strftime("%d/%m/%Y"),
-                "all_subjects": all_subjects_str,  # Stocker toutes les matières pour la recherche
-            })
+        out.setdefault(wlab, {}).setdefault(subject, []).append({
+            "id": item_id,
+            "title": title,
+            "date": d.strftime("%d/%m/%Y"),
+        })
 
     return out
 
-UVSQ = build_uvsq_from_list(UPS)
+UVSQ = build_uvsq_manual()
 
 # =========================
 # SU — Cours avec nouvelle nomenclature (sept → nov 2025)
