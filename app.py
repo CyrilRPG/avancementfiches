@@ -1935,7 +1935,7 @@ with right:
         ("UVSQ (e campus, Zineb)",
          "https://www.uvsq.fr/ufr-des-sciences-de-la-sante-simone-veil",
          "22506082",
-         "1Croy@able2025!"),
+         "1Croyable2025!"),
         ("UPEC L1 (Crystolink, Ahuna)",
          "https://cristolink.medecine.u-pec.fr/login/index.php",
          "ahuna.somon@etu.u-pec.fr",
@@ -1949,7 +1949,7 @@ with right:
          "lina.atea",
          "Monamalek93#"),
         ("SU (Moodle Sciences, Mayla)",
-         "https://moodle-sciences-25.sorbonne-universite.fr/login/index.php",
+         "https://moodlepass.sorbonne-universite.fr/moodle/?redirect=0",
          "21505225",
          "Mayla_MD-2008"),
     ]
